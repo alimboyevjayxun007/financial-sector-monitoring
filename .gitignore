@@ -1,0 +1,19 @@
+# raw data is too large / not meant for git
+fintech_track_data/
+__MACOSX/
+
+# generated data
+data/processed/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# model artifacts
+*.pkl
+*.joblib
+
+# os
+.DS_Store
