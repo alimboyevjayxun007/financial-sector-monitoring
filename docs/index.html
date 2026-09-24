@@ -387,7 +387,7 @@
     <ol class="steps">
       <li><strong>EDA (ushbu sayt):</strong> ikkita xom jadval (<code>signals</code> va <code>transactions</code>) ni chuqur o'rganish — hajm, sifat, taqsimotlar, target bilan bog'liqlik, va eng muhimi, <strong>data leakage</strong> xavfini aniqlash.</li>
       <li><strong>Feature engineering:</strong> har bir signal uchun uning ortidagi (signal sanasidan oldingi) tranzaksiya tarixini o'nlab sonli xususiyatlarga (n_txn, amt_mean, frac_kirim, recency va h.k.) yig'ish.</li>
-      <li><strong>Modellashtirish:</strong> EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06). 10+ model turi va feature yo'nalishi (gradient boosting, random forest, SVM, MLP, tuned LightGBM, stacking, logistic regression) real Stratified K-Fold CV bilan solishtirildi — natijada oddiy, regullashtirilgan <strong>Logistic Regression + soat/kun-entropy feature'lari</strong> (22 feature, CV ROC-AUC 0.5656–0.568) eng barqaror natijani berdi, chunki bu qadar zaif signalda daraxt-asosli modellar shovqinga moslashib (overfit) qoladi.</li>
+      <li><strong>Modellashtirish:</strong> EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06). 8 xil model/feature konfiguratsiyasi (gradient boosting, random forest, SVM, MLP, tuned LightGBM, logistic regression) real Stratified K-Fold CV bilan solishtirildi (barchasi <code>scripts/model_selection_experiments.py</code> orqali qayta ishlab chiqariladi) — natijada oddiy, regullashtirilgan, kalibrlangan <strong>Logistic Regression</strong> (22 feature, CV ROC-AUC ≈0.565) eng barqaror natijani berdi, chunki bu qadar zaif signalda daraxt-asosli modellar shovqinga moslashib (overfit) qoladi.</li>
     </ol>
     <div class="callout">
       Ushbu sahifadagi barcha raqamlar va grafiklar <code>docs/generate_charts.py</code> skripti orqali haqiqiy <code>train_signals.csv</code>, <code>train_transactions.parquet</code>, <code>test_signals.csv</code>, <code>test_transactions.parquet</code> fayllaridan hisoblab olingan — hech qanday sun'iy/namunaviy raqam yo'q.
@@ -590,37 +590,73 @@
     </p>
 
     <div class="pill-row">
-      <span class="pill">Logistic Regression (yakuniy tanlov)</span>
+      <span class="pill">Kalibrlangan Logistic Regression (yakuniy tanlov)</span>
       <span class="pill">StandardScaler + class_weight="balanced"</span>
       <span class="pill">Stratified K-Fold CV</span>
       <span class="pill">ROC-AUC baholash</span>
     </div>
 
+    <p class="callout warn">
+      <strong>Shaffoflik uchun eslatma:</strong> quyidagi jadvaldagi har bir raqam repo'dagi
+      <code>scripts/model_selection_experiments.py</code> skriptidan olingan — uni ishga tushirib
+      o'zingiz qayta tekshirishingiz mumkin. Loyihaning ilgarigi versiyasida bu raqamlar fon
+      rejimidagi tahlil natijalaridan to'g'ridan-to'g'ri ko'chirilgan va ularni ishlab chiqargan
+      kod hech qachon commit qilinmagan edi — mustaqil audit buni to'g'ri tanqid qildi, shu sababli
+      barchasi qayta, haqiqatan ishga tushirilib tasdiqlandi.
+    </p>
+
     <table>
-      <thead><tr><th>Model</th><th>CV ROC-AUC</th></tr></thead>
+      <thead><tr><th>Model</th><th>CV ROC-AUC (5-fold)</th></tr></thead>
       <tbody>
-        <tr><td>Tuned LightGBM (40-config random search)</td><td>0.547</td></tr>
-        <tr><td>HistGradientBoostingClassifier (depth=6)</td><td>0.539</td></tr>
-        <tr><td>RandomForestClassifier</td><td>0.544</td></tr>
-        <tr><td>SVC (RBF kernel)</td><td>0.550</td></tr>
-        <tr><td>MLPClassifier (kichik, regullashtirilgan)</td><td>0.561</td></tr>
-        <tr><td>OOF stacking (LR+MLP+HGB → meta-LR)</td><td>0.5655</td></tr>
-        <tr><td><strong>Logistic Regression + soat/kun entropy (yakuniy, 22 feature)</strong></td><td><strong>0.5656 (5-fold) / 0.5677±0.0163 (5×5 repeat)</strong></td></tr>
+        <tr><td>HistGradientBoostingClassifier (depth=6)</td><td>0.5396 ± 0.0050</td></tr>
+        <tr><td>RandomForestClassifier</td><td>0.5441 ± 0.0041</td></tr>
+        <tr><td>Tuned LightGBM (15-config random search)</td><td>0.5513</td></tr>
+        <tr><td>HistGradientBoostingClassifier (depth=3)</td><td>0.5476 ± 0.0060</td></tr>
+        <tr><td>Logistic Regression + darajа-2 interaction</td><td>0.5464 ± 0.0087</td></tr>
+        <tr><td>SVC (RBF kernel)</td><td>0.5504 ± 0.0044</td></tr>
+        <tr><td>MLPClassifier (kichik, regullashtirilgan)</td><td>0.5611 ± 0.0069</td></tr>
+        <tr><td><strong>Logistic Regression (bazaviy 18 feature)</strong></td><td><strong>0.5629 ± 0.0120</strong></td></tr>
+        <tr><td><strong>Logistic Regression + soat/kun entropy (22 feature)</strong></td><td><strong>0.5656 ± 0.0124</strong></td></tr>
       </tbody>
     </table>
 
+    <h3>Muhim tuzatish: "statistik jihatdan haqiqiy" da'vosi noto'g'ri hisoblangan edi</h3>
     <p>
-      Qo'shimcha feature'lar (ko'p vaqt oynali recency, shaxsiylashtirilgan drift, tranzaksiya-turi o'tish
-      patternlari, o'z-tarixga nisbatan ekstremallik), degree-2 interaction xususiyatlar, tuned LightGBM va
-      to'g'ri out-of-fold stacking — 10 dan ortiq jiddiy urinish sinovdan o'tkazildi. Faqat bitta topilma
-      statistik jihatdan haqiqiy chiqdi (paired t-test, p=0.0008): <strong>soat va hafta-kuni bo'yicha faollik
-      entropy'si va konsentratsiyasi</strong> (<code>hour_entropy</code>, <code>hour_maxshare</code>,
-      <code>dow_entropy</code>, <code>dow_maxshare</code>) — bular production'ga qo'shildi (18 → 22 feature),
-      CV ROC-AUC'ni 0.563'dan 0.566'ga (5×5 repeat: 0.568) ko'tardi. Qolgan barcha yo'nalishlar ahamiyatsiz yoki
-      yomonroq natija berdi — bu ma'lumotning haqiqiy signal-chegarasiga yaqinlashilganini tasdiqlaydi. Qo'shimcha
-      tekshiruv: adversarial validation (train vs test farqlanishini o'lchash) AUC ≈ 0.498 (yakuniy feature
-      to'plamida qayta tekshirildi) — bu train va test taqsimotlari statistik farqlanmasligini, ya'ni
-      <strong>covariate shift yo'qligini</strong> tasdiqlaydi.
+      22-feature to'plam (soat/hafta-kuni entropy qo'shilgan) 18-feature bazadan <code>RepeatedStratifiedKFold(5×5)</code>da
+      0.5652 → 0.5677 ga (+0.0025 AUC) yaxshilandi. Loyihaning ilgarigi versiyasida bu "statistik jihatdan haqiqiy
+      (p=0.0008)" deb yozilgan edi — lekin bu <strong>noto'g'ri statistik usul</strong> bilan hisoblangan edi: 25 ta
+      fold-AUC farqiga oddiy paired t-test qo'llash, bir-biriga qisman ustma-ust tushadigan CV fold'lar uchun
+      <em>anti-konservativ</em> (sun'iy kichik p-qiymat beradi) — bu yaxshi hujjatlashtirilgan statistik xato
+      (Dietterich 1998; Nadeau &amp; Bengio 2003). To'g'ri, tuzatilgan test bilan qayta hisoblaganda:
+    </p>
+    <table>
+      <thead><tr><th>Test</th><th>t</th><th>p-qiymat</th><th>Xulosa</th></tr></thead>
+      <tbody>
+        <tr><td>Naive paired t-test</td><td>3.832</td><td>0.0008</td><td>noto'g'ri usul — ishlatilmaydi</td></tr>
+        <tr><td><strong>Nadeau-Bengio corrected t-test</strong></td><td>1.423</td><td><strong>0.1675</strong></td><td><strong>AHAMIYATSIZ (p &gt; 0.05)</strong></td></tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>Halol xulosa:</strong> bu +0.0025 AUC farqni "isbotlangan" deb da'vo qilib bo'lmaydi. Shunga qaramay,
+      4 feature production'da saqlab qolindi — yo'nalishi ikkala o'lchovda ham barqaror ijobiy, domain nuqtai
+      nazaridan mantiqiy, hisoblash arzon va hech qanday zarar kuzatilmadi. Bu "isbotlangan yutuq" emas, balki
+      "zararsiz, ehtimol foydali" qo'shimcha sifatida hujjatlashtirilmoqda.
+    </p>
+
+    <h3>Ehtimollik kalibratsiyasi — audit orqali topilgan muhim muammo</h3>
+    <p>
+      <code>class_weight="balanced"</code> bilan o'qitilgan modelning xom chiqishi kalibrlanmagan edi: o'rtacha
+      bashorat qilingan "ehtimollik" ≈0.49 edi, haqiqiy bazaviy stavka ≈17.2% o'rniga. ROC-AUC'ga bu zarar
+      keltirmaydi, lekin ustun aynan <strong>"ehtimollik"</strong> deb nomlangani uchun muhim.
+      <code>CalibratedClassifierCV</code> (sigmoid) qo'shilgandan so'ng: kalibratsiyasiz o'rtacha 0.4937 → kalibratsiyadan
+      keyin 0.1720 (haqiqiy 0.1718ga deyarli aynan mos), AUC narxi shovqin chegarasida (0.5649 vs 0.5656).
+    </p>
+
+    <p>
+      Qo'shimcha tekshiruv: adversarial validation (train vs test farqlanishini o'lchash) AUC ≈ 0.498 — bu train
+      va test <strong>feature taqsimotlari</strong> statistik farqlanmasligini tasdiqlaydi. Muhim aniqlik: bu faqat
+      P(X) siljimaganini ko'rsatadi, P(y|X) (target bilan bog'liqlik) haqida hech narsa aytmaydi, chunki test
+      target'lari mavjud emas.
     </p>
 
     <h3>EDA asosida taklif qilingan feature guruhlari</h3>
@@ -675,7 +711,7 @@
       <li>Signal sanasidan keyin ham tranzaksiyalar mavjudligi sababli, feature engineeringda <strong>leakage'ga qarshi sana filtri majburiy</strong>.</li>
       <li>Hech qanday yakka agregat xususiyat target bilan kuchli bog'liq emas (|korrelyatsiya| ≤ 0.06) — signal ko'p, lekin zaif xususiyatlarning yig'indisidan iborat.</li>
       <li>Eng ishonchli (garchi hali ham nisbatan zaif) yo'nalish — <strong>hajm va recency</strong>: escalate signallarda ko'proq va so'nggi kunlarda faolroq tranzaksiya tarixi kuzatiladi.</li>
-      <li>Xulosa: <strong>ko'p xususiyatli agregatsiya + regullashtirilgan Logistic Regression</strong> — real CV bilan solishtirilgan 10+ model/feature variantidan eng barqaror natija berdi (0.5656–0.568 ROC-AUC); zaif/shovqinli signalda murakkabroq model (gradient boosting, SVM, MLP, tuned LightGBM) yaxshiroq degani emas. Adversarial validation (AUC≈0.498) train/test o'rtasida covariate shift yo'qligini tasdiqladi.</li>
+      <li>Xulosa: <strong>ko'p xususiyatli agregatsiya + regullashtirilgan, kalibrlangan Logistic Regression</strong> — real CV bilan solishtirilgan 8 model/feature konfiguratsiyasidan eng barqaror natija berdi (CV ROC-AUC ≈0.565); zaif/shovqinli signalda murakkabroq model (gradient boosting, SVM, MLP, tuned LightGBM) yaxshiroq degani emas. Hour/dow-entropy qo'shimchasi (+0.0025 AUC) to'g'ri statistik test bilan tekshirilganda ahamiyatsiz chiqdi (p=0.17) — halol shubha bilan hujjatlashtirilgan. Adversarial validation (AUC≈0.498) faqat train/test feature taqsimotlari o'rtasida covariate shift yo'qligini tasdiqlaydi (concept shift haqida ma'lumot bermaydi).</li>
     </ul>
   </section>
 

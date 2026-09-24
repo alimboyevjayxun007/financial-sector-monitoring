@@ -11,7 +11,7 @@ Vazifalarning 2 kishiga bo'linishi uchun: [TASKS.md](TASKS.md)
 
 **Sabab:** signallarning katta qismi yolg'on musbat (train setda 11 595 ta dismiss / 2 405 ta escalate — ya'ni ~17.2% escalate). Xodimlar hammasini birma-bir qo'lda tekshiradi, bu resurs isrofi va real xavfning navbatda qolishiga olib keladi.
 
-**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) 22 ta sonli xususiyatga aylantirib (feature engineering), ML model bilan escalate ehtimolligini bashorat qilish. Boshida EDA'dagi "yakka xususiyat kuchsiz" topilmasidan kelib chiqib daraxt-asosli gradient boosting model taxmin qilingan edi, lekin **haqiqiy cross-validation tajribasi buni tasdiqlamadi** — bo'lim 5.1/5.1.1'da tushuntirilganidek, oddiy regullashtirilgan **Logistic Regression** amalda barqaror ravishda yaxshiroq umumlashtirdi va yakuniy model sifatida shu tanlandi, **CV ROC-AUC = 0.5656** (5-fold) / **0.5677 ± 0.0163** (5×5 repeat).
+**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) 22 ta sonli xususiyatga aylantirib (feature engineering), ML model bilan escalate ehtimolligini bashorat qilish. Boshida EDA'dagi "yakka xususiyat kuchsiz" topilmasidan kelib chiqib daraxt-asosli gradient boosting model taxmin qilingan edi, lekin **haqiqiy cross-validation tajribasi buni tasdiqlamadi** — bo'lim 5.1/5.1.1'da tushuntirilganidek, oddiy regullashtirilgan, kalibrlangan **Logistic Regression** amalda barqaror ravishda yaxshiroq umumlashtirdi va yakuniy model sifatida shu tanlandi, **CV ROC-AUC ≈ 0.565** (5-fold; barcha raqamlar `scripts/model_selection_experiments.py` bilan qayta ishlab chiqariladi).
 
 ---
 
@@ -57,21 +57,24 @@ WUIT Hackathon/
 │   └── test_features.parquet
 ├── notebooks/
 │   └── submission_pipeline.ipynb      # to'liq, qayta ishlaydigan (reproducible) yakuniy notebook
+├── scripts/
+│   ├── model_selection_experiments.py # model/feature taqqoslash — README §5.1 raqamlarining manbai
+│   └── model_selection_results.csv    # shu skriptning saqlangan chiqishi
 ├── src/
 │   ├── config.py                      # yo'llar, sobitlar, feature ro'yxati (umumiy shartnoma)
 │   ├── data_loading.py                # DataLoader  (A-track)
 │   ├── features.py                    # FeatureBuilder  (A-track)
-│   ├── model.py                       # ModelTrainer — Logistic Regression  (B-track)
+│   ├── model.py                       # ModelTrainer — kalibrlangan Logistic Regression  (B-track)
 │   ├── train.py                       # o'qitish + cross-validation skripti  (B-track)
 │   └── predict.py                     # Predictor + SubmissionWriter  (B-track)
 ├── docs/                               # majburiy EDA veb-sayti (GitHub Pages source)  (A-track)
 │   ├── index.html                     # statik, self-contained sayt (7 bo'lim)
-│   ├── generate_charts.py             # grafiklarni real ma'lumotdan generatsiya qiladi
+│   ├── generate_charts.py             # grafiklarni src.features.build() orqali generatsiya qiladi
 │   └── assets/*.png                   # 8 ta EDA grafigi
 ├── outputs/
 │   ├── model.pkl                      # o'qitilgan model (git'ga qo'shilmaydi)
 │   └── team_<TEAM_ID>.csv             # yakuniy topshiriq fayli
-├── tests/                             # 21 ta test: data loading, features, model, submission format
+├── tests/                             # 25 ta test: data loading, features, model, submission format
 ├── ARCHITECTURE.md
 ├── README.md
 ├── TASKS.md
@@ -108,10 +111,16 @@ python3 -m src.predict --out "outputs/team_<TEAM_ID>.csv"
 
 Yoki butun jarayonni birma-bir ko'rish uchun: `notebooks/submission_pipeline.ipynb` ni oching va tartib bilan ishga tushiring (bu — tekshiruv uchun talab qilinadigan **reproducible notebook**).
 
-Testlarni ishga tushirish (23 ta test — data loading, feature contract, leakage-himoya, model, submission format):
+Testlarni ishga tushirish (25 ta test — data loading, feature contract, leakage-himoya, model, submission format):
 
 ```bash
 python3 -m pytest tests/ -v
+```
+
+README §5.1'dagi model-taqqoslash raqamlarini qayta ishlab chiqarish (~5-6 daqiqa):
+
+```bash
+python3 scripts/model_selection_experiments.py
 ```
 
 Chiqish fayli talablari (majburiy):
@@ -132,50 +141,82 @@ Chiqish fayli talablari (majburiy):
 
 To'liq grafiklar va tahlil `docs/` saytida taqdim etiladi.
 
-### 5.1. Model tanlash — real CV tajribasi (kutilmagan natija)
+### 5.1. Model tanlash — real CV tajribasi
+
+> **Reproducibility:** ushbu bo'limdagi HAR BIR raqam `scripts/model_selection_experiments.py` skriptidan olingan — `python3 scripts/model_selection_experiments.py` bilan o'zingiz qayta ishlab chiqarishingiz mumkin (~5-6 daqiqa), natijalar `scripts/model_selection_results.csv`ga yoziladi. (Loyihaning oldingi versiyasida bu raqamlar fon rejimidagi subagent hisobotidan to'g'ridan-to'g'ri hujjatlarga ko'chirilgan edi, lekin ularni ishlab chiqargan kod hech qachon commit qilinmagan edi — mustaqil audit buni "tasdiqlab bo'lmaydigan da'vo" deb to'g'ri belgiladi. Shu sababli barcha raqamlar shu skript bilan qaytadan, haqiqatan ishga tushirilib tekshirildi.)
 
 Boshida EDA "individual feature'lar kuchsiz, demak nochiziqli/interaction ta'sir bor" degan taxminga asoslanib, gradient boosting (daraxt-asosli ensemble) model tanlangan edi. Lekin haqiqiy `StratifiedKFold(5)` + ROC-AUC bilan solishtirilganda natija teskari chiqdi:
 
-| Model | CV ROC-AUC |
+| Model | CV ROC-AUC (5-fold) |
 |---|---|
-| `HistGradientBoostingClassifier` (depth=6) | 0.539 |
-| `HistGradientBoostingClassifier` (depth=3, kuchliroq regulyarizatsiya) | 0.548 |
-| `RandomForestClassifier` | 0.544 |
-| `SVC` (RBF kernel) | 0.550 |
-| `MLPClassifier` (kichik, regullashtirilgan) | 0.561 |
-| **`LogisticRegression` (standartlashtirilgan, class_weight="balanced")** | **0.563** |
-| Logistic Regression + darajа-2 interaction xususiyatlar | 0.547 (yomonlashdi) |
-| Kengaytirilgan feature to'plami (entropy, recency-acceleration, net-flow, va h.k.) + LR | 0.562 (deyarli o'zgarmadi) |
-| LR + MLP blend (turli og'irliklar) | 0.5628–0.5629 (o'zgarmadi) |
-| `CalibratedClassifierCV(LogisticRegression)` | 0.5625 (AUC bir xil, faqat ehtimolliklar kalibrlanadi) |
+| `HistGradientBoostingClassifier` (depth=6) | 0.5396 ± 0.0050 |
+| `RandomForestClassifier` | 0.5441 ± 0.0041 |
+| `HistGradientBoostingClassifier` (depth=3, kuchliroq regulyarizatsiya) | 0.5476 ± 0.0060 |
+| Logistic Regression + darajа-2 interaction xususiyatlar | 0.5464 ± 0.0087 (bazaviy LR'dan yomonlashdi) |
+| `SVC` (RBF kernel) | 0.5504 ± 0.0044 |
+| `MLPClassifier` (kichik, regullashtirilgan) | 0.5611 ± 0.0069 |
+| **`LogisticRegression` (standartlashtirilgan, class_weight="balanced")** | **0.5629 ± 0.0120** |
 
-**Xulosa (1-bosqich):** signal shu qadar zaif va shovqinli (~14 000 qator, barcha xususiyatlar |korrelyatsiya| ≤ 0.06) ki, daraxt-asosli va boshqa murakkab modellar haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi; oddiy, regullashtirilgan chiziqli model esa yaxshiroq umumlashtiradi. 7 xil model oilasi, qo'shimcha feature'lar, interaction'lar, blend va kalibratsiya sinovdan o'tkazildi — barchasi 0.54–0.56 oralig'ida qoldi.
+**Xulosa (1-bosqich):** signal shu qadar zaif va shovqinli (~14 000 qator, barcha xususiyatlar |korrelyatsiya| ≤ 0.06) ki, daraxt-asosli va boshqa murakkab modellar haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi; oddiy, regullashtirilgan chiziqli model esa yaxshiroq umumlashtiradi.
 
-### 5.1.1. Yakuniy feature qidiruvi — 2-bosqich (reytingni oshirish uchun)
+### 5.1.1. Hour/dow entropy feature'lari — halol statistik xulosa (dastlab noto'g'ri hisoblangan edi)
 
-Yuqoridagi xulosani sinash uchun yana bir keng ko'lamli tajriba o'tkazildi: ko'p vaqt oynali (3/14/60/90 kun) va "surge" nisbat xususiyatlari, shaxsiylashtirilgan drift (so'nggi faollik o'zining tarixiy bazasidan qanchalik farq qiladi), tranzaksiya turi o'tish patternlari, o'z-tarixiga nisbatan ekstremallik rangi, to'g'ri tuned LightGBM (40 ta konfiguratsiyali randomized search, early stopping), MLP, va to'g'ri out-of-fold stacking (LR+MLP+HGB → meta-LR) sinovdan o'tkazildi — `RepeatedStratifiedKFold(5×5)` bilan.
+18-feature bazaga 4 ta yangi feature qo'shildi: `hour_entropy`, `hour_maxshare`, `dow_entropy`, `dow_maxshare` (signal tranzaksiyalarining soat/hafta-kuni bo'yicha qanchalik "tarqoq" yoki "bitta vaqtga to'plangan" ekanligini o'lchaydi). `RepeatedStratifiedKFold(5×5)` bilan solishtirilganda:
 
-| Tajriba | CV ROC-AUC (5×5 repeat) | Xulosa |
-|---|---|---|
-| Baseline LR (18 feature) | 0.5652 ± 0.0166 | — |
-| + ko'p vaqt oynasi / surge nisbatlari | 0.5631 ± 0.0101 (5-fold) | ahamiyatsiz |
-| + shaxsiylashtirilgan drift (recent vs own baseline) | 0.5633 ± 0.0105 (5-fold) | ahamiyatsiz |
-| **+ soat/hafta-kuni entropy va konsentratsiya (4 feature)** | **0.5677 ± 0.0163** | **statistik haqiqiy: p=0.0008 (paired t-test)** |
-| + tranzaksiya turi o'tish patternlari | 0.5635 ± 0.0116 (5-fold) | ahamiyatsiz |
-| + o'z-tarixiga nisbatan ekstremallik | 0.5626 ± 0.0120 (5-fold) | ahamiyatsiz (biroz yomonlashdi) |
-| Tuned LightGBM (40-config random search) | 0.5474 ± 0.0132 | daraxtlar hali ham yutqazadi (best_iteration ≈ 1-2 — deyarli darhol early-stop) |
-| MLP / HGB kengaytirilgan feature'larda | 0.559 / 0.552 | LR'dan yomon |
-| OOF stacking (LR+MLP+HGB → meta-LR) | 0.5655 | LR yolg'izidan yaxshi emas |
+| To'plam | CV ROC-AUC (5×5 repeat, 25 fold) |
+|---|---|
+| Baseline LR (18 feature) | 0.5652 ± 0.0166 |
+| **LR + hour/dow entropy (22 feature)** | **0.5677 ± 0.0163** |
 
-**Yakuniy xulosa:** faqat **soat/hafta-kuni entropy + eng ko'p ishlatilgan soat/kun ulushi** (`hour_entropy`, `hour_maxshare`, `dow_entropy`, `dow_maxshare`) statistik jihatdan haqiqiy (p=0.0008, tasodif emas) yaxshilanish berdi va **production'ga qo'shildi** (18 → 22 feature). Boshqa hamma yo'nalish (10+ta jiddiy urinish) ahamiyatsiz yoki yomonroq natija berdi — bu yana bir bor tasdiqlaydi: **~0.56-0.57 ROC-AUC — bu feature oilasi va ma'lumot uchun real chegara**, murakkabroq model yoki ko'proq feature bilan buni sezilarli oshirib bo'lmaydi. Yakuniy model: `StandardScaler` + `LogisticRegression` (`src/model.py`), **CV ROC-AUC = 0.5656** (5-fold) / **0.5677 ± 0.0163** (5×5 repeat, barqarorroq baho).
+Farq: +0.0025 AUC. **Bu yerda muhim tuzatish bor.** Loyihaning oldingi versiyasida bu farq "statistik jihatdan haqiqiy (p=0.0008)" deb e'lon qilingan edi — lekin bu **noto'g'ri statistik usul bilan hisoblangan edi**: 25 ta fold-AUC juftlik farqiga oddiy paired t-test qo'llash, bir-biriga qisman ustma-ust tushadigan (overlapping) CV fold'lar uchun **anti-konservativ** (sun'iy kichik p-qiymat beradi) — bu Dietterich (1998) va Nadeau & Bengio (2003) tomonidan yaxshi hujjatlashtirilgan statistik xato. To'g'ri, tuzatilgan (Nadeau-Bengio corrected variance) test bilan qayta hisoblaganda:
+
+```
+naive paired t-test:            t=3.832, p=0.0008   <- noto'g'ri usul, ishlatilmaydi
+Nadeau-Bengio corrected t-test:  t=1.423, p=0.1675   <- to'g'ri usul — AHAMIYATSIZ (p > 0.05)
+```
+
+**Halol xulosa:** bu +0.0025 AUC farqni statistik jihatdan "isbotlangan" deb da'vo qilib bo'lmaydi — u shovqin chegarasida. Shunga qaramay, bu 4 feature production'da **saqlab qolindi**, chunki: (1) yo'nalishi ikkala o'lchovda ham (5-fold va 5×5-repeat) barqaror ijobiy, salbiy emas; (2) domain nuqtai nazaridan mantiqiy (faoliyat konsentratsiyasi xulq-atvor signali bo'lishi mumkin); (3) hech qanday zarar (yomonlashish) kuzatilmadi; (4) hisoblash arzon. Bu **"isbotlangan yutuq" emas, balki "zararsiz, ehtimol foydali" qo'shimcha** sifatida hujjatlashtirilmoqda — kelajakda ko'proq ma'lumot bilan qayta tekshirish tavsiya etiladi.
+
+Qo'shimcha statistik ehtiyot: bu taqqoslash 2-bosqichda sinalgan ~10 ta variantdan biri edi (multiple comparisons) — hech qanday tuzatish (Bonferroni va h.k.) qo'llanilmagan, bu ham yuqoridagi "isbotlanmagan" xulosani mustahkamlaydi.
+
+### 5.1.2. Boshqa yo'nalishlar (2-bosqich, hammasi ahamiyatsiz yoki yomonroq)
+
+| Tajriba | Natija |
+|---|---|
+| Tuned LightGBM (15-config randomized search, early stopping, 22 feature) | 0.5513 — daraxtlar hali ham yutqazadi |
+| `CalibratedClassifierCV(LR, sigmoid)` — AUC ta'siri | 0.5649 ± 0.0115 (uncalibrated LR'ning 0.5656'siga deyarli teng — kalibratsiya AUC'ga zarar keltirmaydi, pastda ko'ring) |
+| Adversarial validation (train vs test, 22 feature) | 0.498 — pastda ko'ring |
+
+Loyihaning oldingi versiyasida bu yerda yana bir nechta yo'nalish (ko'p vaqt oynasi, shaxsiy drift, o'tish patternlari, OOF stacking) "sinovdan o'tkazilgan va ahamiyatsiz chiqqan" deb yozilgan edi — lekin 5.1'dagi audit topilmasiga ko'ra, ularni ishlab chiqargan kod hech qachon commit qilinmagan, shuning uchun bu da'volar **olib tashlandi** (tasdiqlanmagan bo'lgani uchun). `scripts/model_selection_experiments.py` hozircha faqat yuqoridagi, haqiqatan qayta ishlab chiqarilgan taqqoslashlarni o'z ichiga oladi.
+
+**Yakuniy xulosa:** ~0.56-0.57 ROC-AUC — bu feature oilasi va ma'lumot uchun amaliy chegaraga yaqin ko'rinadi (garchi bu "isbotlangan" emas, faqat bir nechta yo'nalishning muvaffaqiyatsizligiga asoslangan kuzatuv). Yakuniy model: `StandardScaler` + `LogisticRegression` + kalibratsiya (pastga qarang), CV ROC-AUC ≈ **0.565** (5-fold).
+
+### 5.1.3. Ehtimollik kalibratsiyasi — muhim tuzatish
+
+Audit shuni topdi: `class_weight="balanced"` bilan o'qitilgan modelning xom `predict_proba` chiqishi **kalibrlanmagan** — o'rtacha bashorat qilingan "ehtimollik" ≈0.49 edi, haqiqiy train bazaviy stavkasi ≈17.2% o'rniga. ROC-AUC'ga bu zarar keltirmaydi (chunki AUC threshold/kalibratsiyaga bog'liq emas), lekin topshiriq ustuni aynan **"ehtimollik" (probability)** deb nomlangani uchun, bu raqamlar haqiqiy ma'noda ehtimollik bo'lishi kerak.
+
+Yechim: `CalibratedClassifierCV` (Platt/sigmoid scaling, `cv=5`) qo'shildi. Natija:
+
+```
+haqiqiy bazaviy stavka:      0.1718
+kalibratsiyasiz o'rtacha:    0.4937
+kalibratsiyadan keyin:       0.1720   <- deyarli aynan mos
+```
+
+AUC narxi: 0.5649 (kalibrlangan) vs 0.5656 (kalibratsiyasiz) — farq shovqin chegarasida. Bu **arzon, deyarli bepul tuzatish** — endi `outputs/team_<TEAM_ID>.csv`dagi `ehtimollik` ustuni haqiqatan ma'noli ehtimollik qiymatlarini ifodalaydi (o'rtacha 0.172, oraliq [0.070, 0.405] — bashorat oralig'i model zaifligi tufayli tabiiy ravishda tor).
 
 ### 5.2. Production-readiness tekshiruvlari
 
-- **Covariate shift yo'qligi (adversarial validation):** train va test feature jadvallarini "qaysi biri train, qaysi biri test" deb ajratishga harakat qiluvchi klassifikator qurildi — CV AUC ≈ **0.498** (yakuniy 22-feature to'plamida qayta tekshirildi, tasodifiy taxmindan farqsiz). Demak train va test taqsimotlari statistik jihatdan bir xil, model production'da (test'da) train'dagi kabi ishlashi kutiladi.
-- **Determinizm:** `data/processed/` va `outputs/` to'liq o'chirilib, butun pipeline (`features → train → predict`) noldan qayta qurildi — natija **bayt-baytiga bir xil** chiqdi (barcha random_state'lar qat'iy belgilangan).
+- **Covariate shift yo'qligi (adversarial validation) — cheklovi bilan:** train va test feature jadvallarini "qaysi biri train, qaysi biri test" deb ajratishga harakat qiluvchi klassifikator qurildi — CV AUC ≈ **0.498** (yakuniy 22-feature to'plamida qayta tekshirildi, tasodifiy taxmindan farqsiz). **Muhim aniqlik:** bu faqat P(X) (feature taqsimoti) siljimaganini tasdiqlaydi — P(y|X) (target bilan bog'liqlik) haqida hech narsa aytmaydi, chunki test target'lari mavjud emas va tekshirib bo'lmaydi. "Model production'da xuddi train'dagidek ishlaydi" degan xulosa shu ma'noda **qisman**, to'liq emas.
+- **Determinizm:** `data/processed/` va `outputs/` to'liq o'chirilib, butun pipeline (`features → train → predict`) noldan qayta qurildi — natija **bayt-baytiga bir xil** chiqdi (barcha random_state'lar qat'iy belgilangan). Mustaqil production-stress-test subagenti tomonidan alohida, scratch nusxada ham tasdiqlandi.
 - **Reproducibility:** `requirements.txt`dagi barcha asosiy kutubxonalar (`pandas`, `numpy`, `pyarrow`, `scikit-learn`, `joblib`, `matplotlib`) aniq versiyalarga pin qilingan — shu versiyalarda `model.pkl` va CV natijalari sinovdan o'tgan.
-- **Input validatsiyasi:** `src/predict.py`dagi `predict()` funksiyasi endi ishlatishdan oldin barcha kerakli feature ustunlari mavjudligini va NaN yo'qligini tekshiradi, aks holda tushunarli xatolik chiqaradi (sukut noaniq sklearn xatosi o'rniga).
-- **Real end-to-end sinov:** notebook (`notebooks/submission_pipeline.ipynb`) skript sifatida ajratib olinib bajarildi, `src/*.py` skriptlari CLI orqali ishga tushirildi — barchasi xatosiz, bir xil natija bilan yakunlandi.
+- **Input validatsiyasi:** `src/predict.py`dagi `predict()` funksiyasi endi ishlatishdan oldin barcha kerakli feature ustunlari mavjudligini, NaN yo'qligini va **cheksiz (inf) qiymat yo'qligini** tekshiradi (oxirgisi audit orqali topilgan bo'shliq edi). `src/data_loading.py` ham xom ma'lumotda NaN topilsa qat'iy xato chiqaradi (avval sokin o'tib ketardi).
+- **Xavfsiz muvaffaqiyatsizlik (fail-fast):** avval `train.py`/`predict.py` kerakli fayl topilmasa sokin tasodifiy "dummy" ma'lumotga o'tib ketardi (faqat `print()` ogohlantirish bilan) — bu real ma'lumot o'rniga shovqinda o'qitilgan modelni bilmasdan submission sifatida yozib qo'yish xavfini tug'dirardi. Audit buni **yuqori darajali xavf** deb belgiladi; endi ikkalasi ham fayl topilmasa `FileNotFoundError` bilan to'xtaydi.
+- **Test qamrovi haqida aniqlik:** "real ma'lumot mavjud bo'lsa" ishlaydigan 4 ta test avval ma'lumot yo'q bo'lganda sokin `return` qilib, hech narsa signal bermas edi (natijada "N/N passed" hisobotida bu testlar chindan sinalganmi, yo'qmi bilib bo'lmas edi). Endi ular `pytest.skip()` ishlatadi — ma'lumot yo'qligi endi pytest natijasida aniq ko'rinadi.
+- **Notebook haqiqatan bajarilgan:** audit `notebooks/submission_pipeline.ipynb`ning har bir katagida `execution_count: null` va **0 ta saqlangan chiqish** borligini aniqladi — ya'ni "reproducible notebook" hech qachon o'zi ichida ishga tushirilmagan edi (faqat kodi alohida skript sifatida ajratib sinalgan edi, bu boshqa narsa). Bu tuzatildi: `nbclient` bilan notebook **butunlay, o'zi ichida** qayta bajarildi — endi har bir kataqda real `execution_count` (1-5) va real saqlangan chiqish bor (masalan `CV ROC-AUC: 0.5649`), GitHub'da notebookni ochgan har kim buni ko'radi. `src/*.py` skriptlari ham CLI orqali alohida ishga tushirildi — barchasi xatosiz, bir xil natija bilan yakunlandi.
+- **Test qamrovi mustaqil tasdiqlandi:** audit `pytest`ni ma'lumotsiz worktree'da ishga tushirib, "23/23 passed" da'vosini mustaqil tekshirdi — lekin bu paytda 4 ta test hali sokin no-op bo'lgani (yuqoriga qarang) uchun bu raqam ular chindan ishlaganini isbotlamasdi. Tuzatishdan keyin (`pytest.skip()`) bu endi shaffof: ma'lumot mavjud bo'lganda barcha 25 ta test chindan ishlaydi va o'tadi.
+
+**Kelib chiqqan asosiy saboq (halollik uchun ochiq yozilmoqda):** bu loyihaning oldingi versiyasi ML natijalarini haqiqiy, commit qilingan kod bilan emas, balki fon rejimidagi tahlil hisobotlariga asoslanib hujjatlashtirgan edi — bu real ishlagan narsa bilan "ishonarli eshitiladigan, lekin tekshirib bo'lmaydigan" da'vo orasidagi farqni yo'qotib qo'yishi mumkin edi. Mustaqil "roast" auditi buni to'g'ri ushladi. Endi har bir statistik da'vo orqasida haqiqatan ishga tushirilgan, repo'da saqlangan kod bor.
 
 ---
 

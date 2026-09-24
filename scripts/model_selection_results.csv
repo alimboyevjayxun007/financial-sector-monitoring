@@ -1,0 +1,16 @@
+model,features,n_folds,auc_mean,auc_std,note
+HistGradientBoosting(depth=6),18,5,0.5396407154492536,0.00495755709282399,
+HistGradientBoosting(depth=3),18,5,0.5476424977071808,0.005966695588500992,
+RandomForest,18,5,0.5440831815993523,0.004144784279125682,
+SVC(RBF),18,5,0.5504243620673116,0.004356605690463661,
+"MLP(16,alpha=1.0)",18,5,0.5610766702616639,0.0068606492739975685,
+LogisticRegression,18,5,0.5628662795545072,0.01197555929469305,"baseline, pre-entropy"
+LogisticRegression+poly2,18,5,0.5464071096671356,0.008690818383954146,
+LogisticRegression,22,5,0.5656101319749445,0.012354281175971248,with hour/dow entropy
+LogisticRegression (5x5 repeat),18,25,0.565169229334818,0.016554972085011572,
+LogisticRegression (5x5 repeat),22,25,0.5676849025361315,0.016344577178081,
+LightGBM (best of 15-config search),22,1,0.5513181805549205,0.0,"best_params={'reg_lambda': 1.0, 'reg_alpha': 0.0, 'num_leaves': 15, 'min_child_samples': 200, 'max_depth': 3, 'learning_rate': 0.01, 'feature_fraction': 0.8, 'bagging_fraction': 0.8}"
+"CalibratedClassifierCV(LR, sigmoid, correctly scaled)",22,5,0.5649300409973114,0.011502201562689432,"corrected 2025-09-25: first run omitted StandardScaler inside CalibratedClassifierCV, this rerun fixes that; mean predicted prob 0.1720 vs true base rate 0.1718 (uncalibrated LR predicts mean 0.4937)"
+Adversarial validation (train-vs-test),22,5,0.49830434523809525,0.0075537335309447656,~0.5 = no detectable covariate shift in P(X); says nothing about P(y|X)
+18->22 feature diff naive paired t-test (5x5 repeat),—,25,0.0025156706012434935,—,"t=3.832 p=0.0008 -- ANTI-CONSERVATIVE, do not cite alone, see next row"
+18->22 feature diff Nadeau-Bengio corrected t-test (5x5 repeat),—,25,0.0025156706012434935,—,"t=1.423 p=0.1675 -- NOT statistically significant; this is the number README cites"

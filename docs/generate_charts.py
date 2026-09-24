@@ -18,6 +18,7 @@ faylni o'zgartirmaydi yoki qayta yozmaydi.
 from __future__ import annotations
 
 import pathlib
+import sys
 
 import matplotlib
 
@@ -35,6 +36,15 @@ REPO_ROOT = HERE.parent
 DATA_DIR = REPO_ROOT / "fintech_track_data" / "fintech_data"
 ASSETS_DIR = HERE / "assets"
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+
+# src.features.build() ni ishlatamiz (o'zimizning mustaqil nusxasini
+# yozish o'rniga) — shunda bu sayt qachondir production feature kontraktidan
+# (masalan yangi feature qo'shilganda) chetlashib qolmaydi. Ilgari bu skript
+# aggregatsiya logikasini mustaqil qayta yozgan edi va faqat 11/22 ta
+# production feature'ni qamrardi (audit topilmasi) — endi bitta manba bor.
+sys.path.insert(0, str(REPO_ROOT))
+from src import config as feature_config  # noqa: E402
+from src.features import build as build_production_features  # noqa: E402
 
 COLOR_DISMISS = "#3b82f6"   # ko'k — dismiss (0)
 COLOR_ESCALATE = "#ef4444"  # qizil — escalate (1)
@@ -102,50 +112,8 @@ all_txn = pd.concat([train_txn, test_txn], ignore_index=True)
 print("Signal darajasidagi agregat xususiyatlar hisoblanmoqda (leakage filtri bilan)...")
 
 
-def build_features(signals: pd.DataFrame, txn: pd.DataFrame) -> pd.DataFrame:
-    merged = txn.merge(
-        signals[["signal_id", "signal_sanasi"]], on="signal_id", how="inner"
-    )
-    # Leakage'ga qarshi: faqat signal sanasidan oldingi/tengdagi tranzaksiyalar
-    merged = merged[merged["tranzaksiya_vaqti"] <= merged["signal_sanasi"]].copy()
-
-    merged["is_kirim"] = (merged["kirim_chiqim"] == "kirim").astype(int)
-    merged["is_naqd"] = (merged["tranzaksiya_turi"] == "naqd").astype(int)
-    merged["is_karta"] = (merged["tranzaksiya_turi"] == "karta").astype(int)
-    merged["is_extreme"] = (merged["miqdor_indeksi"].abs() > 2).astype(int)
-    merged["days_before_signal"] = (
-        merged["signal_sanasi"] - merged["tranzaksiya_vaqti"]
-    ).dt.total_seconds() / 86400.0
-
-    grp = merged.groupby("signal_id")
-    feats = grp.agg(
-        n_txn=("miqdor_indeksi", "size"),
-        amt_mean=("miqdor_indeksi", "mean"),
-        amt_std=("miqdor_indeksi", "std"),
-        amt_max=("miqdor_indeksi", "max"),
-        amt_sum=("miqdor_indeksi", "sum"),
-        frac_kirim=("is_kirim", "mean"),
-        frac_naqd=("is_naqd", "mean"),
-        frac_karta=("is_karta", "mean"),
-        frac_extreme=("is_extreme", "mean"),
-    )
-    feats["n_txn_1d"] = grp.apply(
-        lambda g: (g["days_before_signal"] <= 1).sum(), include_groups=False
-    )
-    feats["n_txn_7d"] = grp.apply(
-        lambda g: (g["days_before_signal"] <= 7).sum(), include_groups=False
-    )
-    feats["n_txn_30d"] = grp.apply(
-        lambda g: (g["days_before_signal"] <= 30).sum(), include_groups=False
-    )
-    feats = feats.reset_index()
-    feats["amt_std"] = feats["amt_std"].fillna(0.0)
-    out = feats.merge(signals[["signal_id", "eskalatsiya"]], on="signal_id", how="left")
-    return out
-
-
-train_feats = build_features(train_signals, train_txn)
-print(f"  train feature jadvali: {train_feats.shape}")
+train_feats = build_production_features(train_signals, train_txn)
+print(f"  train feature jadvali (production 22-feature kontrakti): {train_feats.shape}")
 
 # ---------------------------------------------------------------------------
 # 3. Chart 1 — Target sinf taqsimoti
@@ -355,15 +323,11 @@ savefig(fig, "07_recent_activity.png")
 
 print("Grafik 8/8: xususiyatlar korrelyatsiyasi...")
 
-corr_cols = [
-    "n_txn", "amt_mean", "amt_std", "amt_max", "amt_sum",
-    "frac_kirim", "frac_naqd", "frac_karta", "frac_extreme",
-    "n_txn_1d", "n_txn_7d", "n_txn_30d",
-]
+corr_cols = feature_config.FEATURE_COLUMNS  # barcha 22 ta production feature
 corrs = train_feats[corr_cols + ["eskalatsiya"]].corr()["eskalatsiya"].drop("eskalatsiya")
 corrs = corrs.sort_values()
 
-fig, ax = plt.subplots(figsize=(8.5, 5.5))
+fig, ax = plt.subplots(figsize=(8.5, 8.5))
 colors = [COLOR_ESCALATE if v > 0 else COLOR_DISMISS for v in corrs.values]
 ax.barh(corrs.index, corrs.values, color=colors)
 ax.axvline(0, color="black", linewidth=0.8)

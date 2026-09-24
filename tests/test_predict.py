@@ -17,9 +17,9 @@ def _fake_features(ids):
 
 
 def test_predict_returns_two_columns_in_order():
-    ids = [f"SG_{i}" for i in range(20)]
+    ids = [f"SG_{i}" for i in range(100)]
     train_df = _fake_features(ids)
-    y = pd.Series(([0] * 16) + ([1] * 4))
+    y = pd.Series(([0] * 80) + ([1] * 20))
     model = train(train_df[config.FEATURE_COLUMNS], y)
 
     test_df = _fake_features(ids)
@@ -44,9 +44,9 @@ def test_predict_probabilities_within_unit_range():
 
 
 def test_predict_rejects_missing_feature_columns():
-    ids = [f"SG_{i}" for i in range(20)]
+    ids = [f"SG_{i}" for i in range(100)]
     train_df = _fake_features(ids)
-    y = pd.Series(([0] * 16) + ([1] * 4))
+    y = pd.Series(([0] * 80) + ([1] * 20))
     model = train(train_df[config.FEATURE_COLUMNS], y)
 
     incomplete = _fake_features(ids).drop(columns=[config.FEATURE_COLUMNS[0]])
@@ -55,9 +55,9 @@ def test_predict_rejects_missing_feature_columns():
 
 
 def test_predict_rejects_nan_in_features():
-    ids = [f"SG_{i}" for i in range(20)]
+    ids = [f"SG_{i}" for i in range(100)]
     train_df = _fake_features(ids)
-    y = pd.Series(([0] * 16) + ([1] * 4))
+    y = pd.Series(([0] * 80) + ([1] * 20))
     model = train(train_df[config.FEATURE_COLUMNS], y)
 
     with_nan = _fake_features(ids)
@@ -68,7 +68,10 @@ def test_predict_rejects_nan_in_features():
 
 def test_real_train_and_predict_end_to_end_if_features_available():
     if not config.TRAIN_FEATURES_PATH.exists() or not config.TEST_FEATURES_PATH.exists():
-        return
+        pytest.skip(
+            "data/processed/*.parquet not present (gitignored) — run "
+            "`python3 -m src.features` first to exercise this real-data test"
+        )
     train_features = pd.read_parquet(config.TRAIN_FEATURES_PATH)
     test_features = pd.read_parquet(config.TEST_FEATURES_PATH)
 

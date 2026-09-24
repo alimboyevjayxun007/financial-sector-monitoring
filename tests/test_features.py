@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from src import config
 from src.features import build
@@ -111,7 +112,7 @@ def test_target_column_omitted_when_absent_from_signals():
 
 def test_real_data_end_to_end_if_available():
     if not config.TRAIN_SIGNALS_PATH.exists():
-        return
+        pytest.skip("fintech_track_data/ not present (gitignored, not included in the repo)")
     from src.data_loading import load_signals, load_transactions
 
     signals = load_signals(config.TRAIN_SIGNALS_PATH)

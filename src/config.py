@@ -1,13 +1,5 @@
-"""Shared paths and the feature contract between Track A (features) and Track B (model).
-
-Track B can start immediately with make_dummy_features() while Track A builds
-the real pipeline in features.py — both produce a DataFrame with the same
-columns, so train.py / predict.py never need to change.
-"""
+"""Shared paths and the feature contract between Track A (features) and Track B (model)."""
 from pathlib import Path
-
-import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW_DATA_DIR = ROOT / "fintech_track_data" / "fintech_data"
@@ -52,17 +44,3 @@ FEATURE_COLUMNS = [
     "dow_entropy",
     "dow_maxshare",
 ]
-
-
-def make_dummy_features(signals_df: pd.DataFrame, seed: int = 0) -> pd.DataFrame:
-    """Stand-in for FeatureBuilder.build(), so Track B can build/test the
-    modeling pipeline before Track A's real feature table exists. Replace
-    the call site with the real data_loading + features pipeline once
-    data/processed/*.parquet is available.
-    """
-    rng = np.random.default_rng(seed)
-    n = len(signals_df)
-    data = {col: rng.normal(size=n) for col in FEATURE_COLUMNS}
-    df = pd.DataFrame(data)
-    df.insert(0, ID_COL, signals_df[ID_COL].values)
-    return df

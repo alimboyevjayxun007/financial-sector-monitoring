@@ -1,6 +1,7 @@
 """Track B: Predictor + SubmissionWriter."""
 import argparse
 
+import numpy as np
 import pandas as pd
 
 from src import config
@@ -11,10 +12,13 @@ def predict(model, features_df: pd.DataFrame) -> pd.DataFrame:
     missing = set(config.FEATURE_COLUMNS) - set(features_df.columns)
     if missing:
         raise ValueError(f"features_df is missing required columns: {sorted(missing)}")
-    if features_df[config.FEATURE_COLUMNS].isna().any().any():
+    feature_values = features_df[config.FEATURE_COLUMNS]
+    if feature_values.isna().any().any():
         raise ValueError("features_df has NaN values in feature columns — check the feature pipeline")
+    if not np.isfinite(feature_values.to_numpy(dtype=float)).all():
+        raise ValueError("features_df has infinite (inf/-inf) values in feature columns")
 
-    proba = model.predict_proba(features_df[config.FEATURE_COLUMNS])[:, 1]
+    proba = model.predict_proba(feature_values)[:, 1]
     return pd.DataFrame({config.ID_COL: features_df[config.ID_COL], "ehtimollik": proba})
 
 
@@ -40,11 +44,11 @@ if __name__ == "__main__":
     model = joblib.load(config.OUTPUTS_DIR / "model.pkl")
 
     test_signals = load_signals(config.TEST_SIGNALS_PATH)
-    if config.TEST_FEATURES_PATH.exists():
-        test_features = pd.read_parquet(config.TEST_FEATURES_PATH)
-    else:
-        print(f"[predict] {config.TEST_FEATURES_PATH} not found yet, using dummy features")
-        test_features = config.make_dummy_features(test_signals)
+    if not config.TEST_FEATURES_PATH.exists():
+        raise FileNotFoundError(
+            f"{config.TEST_FEATURES_PATH} not found — run `python3 -m src.features` first."
+        )
+    test_features = pd.read_parquet(config.TEST_FEATURES_PATH)
 
     predictions = predict(model, test_features)
     validate_submission(predictions, test_signals[config.ID_COL])

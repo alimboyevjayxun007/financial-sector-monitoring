@@ -17,3 +17,10 @@ __pycache__/
 
 # os
 .DS_Store
+
+# Claude Code local session state (settings.json is force-added, see README)
+.claude/*
+!.claude/settings.json
+
+# ruff lint cache
+.ruff_cache/

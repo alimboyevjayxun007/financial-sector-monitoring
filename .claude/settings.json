@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Browser__find",
+      "mcp__Claude_Browser__get_page_text",
+      "mcp__Claude_Browser__read_console_messages",
+      "mcp__Claude_Browser__read_page",
+      "mcp__Claude_Browser__read_network_requests",
+      "mcp__terminal__read_terminal",
+      "mcp__1a59c906-04da-521d-bda7-7f71b9f9e01c__read"
+    ]
+  }
+}
