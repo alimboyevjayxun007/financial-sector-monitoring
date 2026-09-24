@@ -108,6 +108,12 @@ python3 -m src.predict --out "outputs/team_<TEAM_ID>.csv"
 
 Yoki butun jarayonni birma-bir ko'rish uchun: `notebooks/submission_pipeline.ipynb` ni oching va tartib bilan ishga tushiring (bu — tekshiruv uchun talab qilinadigan **reproducible notebook**).
 
+Testlarni ishga tushirish (23 ta test — data loading, feature contract, leakage-himoya, model, submission format):
+
+```bash
+python3 -m pytest tests/ -v
+```
+
 Chiqish fayli talablari (majburiy):
 - Aynan 2 ustun: `signal_id,ehtimollik`
 - Har bir test `signal_id` uchun bitta qator, dublikatsiz, bo'sh qiymatsiz
