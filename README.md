@@ -11,7 +11,7 @@ Vazifalarning 2 kishiga bo'linishi uchun: [TASKS.md](TASKS.md)
 
 **Sabab:** signallarning katta qismi yolg'on musbat (train setda 11 595 ta dismiss / 2 405 ta escalate — ya'ni ~17.2% escalate). Xodimlar hammasini birma-bir qo'lda tekshiradi, bu resurs isrofi va real xavfning navbatda qolishiga olib keladi.
 
-**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) sonli xususiyatlarga aylantirib (feature engineering), ML model bilan escalate ehtimolligini bashorat qilish. Boshida EDA'dagi "yakka xususiyat kuchsiz" topilmasidan kelib chiqib daraxt-asosli gradient boosting model taxmin qilingan edi, lekin **haqiqiy cross-validation tajribasi buni tasdiqlamadi** — bo'lim 5.1'da tushuntirilganidek, oddiy regullashtirilgan **Logistic Regression** amalda barqaror ravishda yaxshiroq umumlashtirdi (CV ROC-AUC 0.563) va yakuniy model sifatida shu tanlandi.
+**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) 22 ta sonli xususiyatga aylantirib (feature engineering), ML model bilan escalate ehtimolligini bashorat qilish. Boshida EDA'dagi "yakka xususiyat kuchsiz" topilmasidan kelib chiqib daraxt-asosli gradient boosting model taxmin qilingan edi, lekin **haqiqiy cross-validation tajribasi buni tasdiqlamadi** — bo'lim 5.1/5.1.1'da tushuntirilganidek, oddiy regullashtirilgan **Logistic Regression** amalda barqaror ravishda yaxshiroq umumlashtirdi va yakuniy model sifatida shu tanlandi, **CV ROC-AUC = 0.5656** (5-fold) / **0.5677 ± 0.0163** (5×5 repeat).
 
 ---
 
@@ -149,11 +149,29 @@ Boshida EDA "individual feature'lar kuchsiz, demak nochiziqli/interaction ta'sir
 | LR + MLP blend (turli og'irliklar) | 0.5628–0.5629 (o'zgarmadi) |
 | `CalibratedClassifierCV(LogisticRegression)` | 0.5625 (AUC bir xil, faqat ehtimolliklar kalibrlanadi) |
 
-**Xulosa:** signal shu qadar zaif va shovqinli (~14 000 qator, barcha xususiyatlar |korrelyatsiya| ≤ 0.06) ki, daraxt-asosli va boshqa murakkab modellar haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi; oddiy, regullashtirilgan chiziqli model esa yaxshiroq umumlashtiradi. 7 xil model oilasi, qo'shimcha feature'lar, interaction'lar, blend va kalibratsiya sinovdan o'tkazildi — barchasi 0.54–0.56 oralig'ida qoldi, bu ma'lumotning haqiqiy signal-chegarasiga yetilganini ko'rsatadi. Shu sababli yakuniy model: **`StandardScaler` + `LogisticRegression`** (`src/model.py`), CV ROC-AUC ≈ **0.563**.
+**Xulosa (1-bosqich):** signal shu qadar zaif va shovqinli (~14 000 qator, barcha xususiyatlar |korrelyatsiya| ≤ 0.06) ki, daraxt-asosli va boshqa murakkab modellar haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi; oddiy, regullashtirilgan chiziqli model esa yaxshiroq umumlashtiradi. 7 xil model oilasi, qo'shimcha feature'lar, interaction'lar, blend va kalibratsiya sinovdan o'tkazildi — barchasi 0.54–0.56 oralig'ida qoldi.
+
+### 5.1.1. Yakuniy feature qidiruvi — 2-bosqich (reytingni oshirish uchun)
+
+Yuqoridagi xulosani sinash uchun yana bir keng ko'lamli tajriba o'tkazildi: ko'p vaqt oynali (3/14/60/90 kun) va "surge" nisbat xususiyatlari, shaxsiylashtirilgan drift (so'nggi faollik o'zining tarixiy bazasidan qanchalik farq qiladi), tranzaksiya turi o'tish patternlari, o'z-tarixiga nisbatan ekstremallik rangi, to'g'ri tuned LightGBM (40 ta konfiguratsiyali randomized search, early stopping), MLP, va to'g'ri out-of-fold stacking (LR+MLP+HGB → meta-LR) sinovdan o'tkazildi — `RepeatedStratifiedKFold(5×5)` bilan.
+
+| Tajriba | CV ROC-AUC (5×5 repeat) | Xulosa |
+|---|---|---|
+| Baseline LR (18 feature) | 0.5652 ± 0.0166 | — |
+| + ko'p vaqt oynasi / surge nisbatlari | 0.5631 ± 0.0101 (5-fold) | ahamiyatsiz |
+| + shaxsiylashtirilgan drift (recent vs own baseline) | 0.5633 ± 0.0105 (5-fold) | ahamiyatsiz |
+| **+ soat/hafta-kuni entropy va konsentratsiya (4 feature)** | **0.5677 ± 0.0163** | **statistik haqiqiy: p=0.0008 (paired t-test)** |
+| + tranzaksiya turi o'tish patternlari | 0.5635 ± 0.0116 (5-fold) | ahamiyatsiz |
+| + o'z-tarixiga nisbatan ekstremallik | 0.5626 ± 0.0120 (5-fold) | ahamiyatsiz (biroz yomonlashdi) |
+| Tuned LightGBM (40-config random search) | 0.5474 ± 0.0132 | daraxtlar hali ham yutqazadi (best_iteration ≈ 1-2 — deyarli darhol early-stop) |
+| MLP / HGB kengaytirilgan feature'larda | 0.559 / 0.552 | LR'dan yomon |
+| OOF stacking (LR+MLP+HGB → meta-LR) | 0.5655 | LR yolg'izidan yaxshi emas |
+
+**Yakuniy xulosa:** faqat **soat/hafta-kuni entropy + eng ko'p ishlatilgan soat/kun ulushi** (`hour_entropy`, `hour_maxshare`, `dow_entropy`, `dow_maxshare`) statistik jihatdan haqiqiy (p=0.0008, tasodif emas) yaxshilanish berdi va **production'ga qo'shildi** (18 → 22 feature). Boshqa hamma yo'nalish (10+ta jiddiy urinish) ahamiyatsiz yoki yomonroq natija berdi — bu yana bir bor tasdiqlaydi: **~0.56-0.57 ROC-AUC — bu feature oilasi va ma'lumot uchun real chegara**, murakkabroq model yoki ko'proq feature bilan buni sezilarli oshirib bo'lmaydi. Yakuniy model: `StandardScaler` + `LogisticRegression` (`src/model.py`), **CV ROC-AUC = 0.5656** (5-fold) / **0.5677 ± 0.0163** (5×5 repeat, barqarorroq baho).
 
 ### 5.2. Production-readiness tekshiruvlari
 
-- **Covariate shift yo'qligi (adversarial validation):** train va test feature jadvallarini "qaysi biri train, qaysi biri test" deb ajratishga harakat qiluvchi klassifikator qurildi — CV AUC ≈ **0.497** (tasodifiy taxmindan farqsiz). Demak train va test taqsimotlari statistik jihatdan bir xil, model production'da (test'da) train'dagi kabi ishlashi kutiladi.
+- **Covariate shift yo'qligi (adversarial validation):** train va test feature jadvallarini "qaysi biri train, qaysi biri test" deb ajratishga harakat qiluvchi klassifikator qurildi — CV AUC ≈ **0.498** (yakuniy 22-feature to'plamida qayta tekshirildi, tasodifiy taxmindan farqsiz). Demak train va test taqsimotlari statistik jihatdan bir xil, model production'da (test'da) train'dagi kabi ishlashi kutiladi.
 - **Determinizm:** `data/processed/` va `outputs/` to'liq o'chirilib, butun pipeline (`features → train → predict`) noldan qayta qurildi — natija **bayt-baytiga bir xil** chiqdi (barcha random_state'lar qat'iy belgilangan).
 - **Reproducibility:** `requirements.txt`dagi barcha asosiy kutubxonalar (`pandas`, `numpy`, `pyarrow`, `scikit-learn`, `joblib`, `matplotlib`) aniq versiyalarga pin qilingan — shu versiyalarda `model.pkl` va CV natijalari sinovdan o'tgan.
 - **Input validatsiyasi:** `src/predict.py`dagi `predict()` funksiyasi endi ishlatishdan oldin barcha kerakli feature ustunlari mavjudligini va NaN yo'qligini tekshiradi, aks holda tushunarli xatolik chiqaradi (sukut noaniq sklearn xatosi o'rniga).

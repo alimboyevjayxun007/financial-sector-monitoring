@@ -47,6 +47,10 @@ FEATURE_COLUMNS = [
     "n_txn_30d",
     "span_days",
     "velocity",
+    "hour_entropy",
+    "hour_maxshare",
+    "dow_entropy",
+    "dow_maxshare",
 ]
 
 

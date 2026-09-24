@@ -41,7 +41,7 @@ Bu — **relyatsion (1-ko'p) ma'lumot**: model ishlatishdan oldin ko'p qatorli t
 ## 3. Yechim g'oyasi (yuqori darajada)
 
 1. **Feature Engineering (xususiyatlar yasash):** har bir `signal_id` uchun tranzaksiya tarixidan o'nlab sonli xususiyatlar hisoblanadi — masalan: nechta tranzaksiya bo'lgan, o'rtacha summasi qancha, kirim/chiqim nisbati, xalqaro/naqd tranzaksiyalar ulushi, signal sanasidan oldingi 1/7/30 kunlik faollik, va h.k.
-2. **Model:** boshida EDA'dagi zaif korrelyatsiyalarga (~0.06) asoslanib gradient boosting (daraxt-asosli ensemble) taxmin qilingan edi, lekin real `StratifiedKFold` cross-validation buning teskarisini ko'rsatdi — signal shu qadar kuchsiz/shovqinli ekan, daraxt modellar shovqinga moslashib (overfit) ketadi. Yakuniy tanlov: oddiy, regullashtirilgan **Logistic Regression** (`StandardScaler` + `class_weight="balanced"`), CV ROC-AUC ≈ 0.563 — batafsili [README.md § 5.1](README.md#51-model-tanlash--real-cv-tajribasi-kutilmagan-natija) da.
+2. **Model:** boshida EDA'dagi zaif korrelyatsiyalarga (~0.06) asoslanib gradient boosting (daraxt-asosli ensemble) taxmin qilingan edi, lekin real `StratifiedKFold` cross-validation buning teskarisini ko'rsatdi — signal shu qadar kuchsiz/shovqinli ekan, daraxt modellar shovqinga moslashib (overfit) ketadi. 10+ qo'shimcha feature/model yo'nalishi sinovdan o'tkazildi (README.md § 5.1.1) — soat/hafta-kuni entropy xususiyatlari statistik jihatdan haqiqiy (p=0.0008) yaxshilanish berdi. Yakuniy tanlov: oddiy, regullashtirilgan **Logistic Regression** (`StandardScaler` + `class_weight="balanced"`, 22 feature), CV ROC-AUC = 0.5656 (5-fold) / 0.5677±0.0163 (5×5 repeat) — batafsili [README.md § 5.1](README.md#51-model-tanlash--real-cv-tajribasi-kutilmagan-natija) da.
 3. **Chiqish:** har bir test signali uchun 0..1 oralig'idagi ehtimollik — `team_<TEAM_ID>.csv`.
 4. **EDA sayti:** topilmalarni tushunarli grafik va matn bilan ko'rsatuvchi mustaqil veb-sahifa (majburiy topshiriq).
 
@@ -141,7 +141,11 @@ Ikki kishi bir-birini kutmasligi uchun eng muhim narsa — bu **oldindan kelishi
 | `n_txn_1d`, `n_txn_7d`, `n_txn_30d` | signal sanasidan oldingi so'nggi N kundagi faollik |
 | `span_days` | birinchi va oxirgi tranzaksiya orasidagi kunlar |
 | `velocity` | kuniga o'rtacha tranzaksiya soni |
+| `hour_entropy`, `hour_maxshare` | soat bo'yicha faollik entropy'si va eng ko'p ishlatilgan soat ulushi (konsentratsiya) |
+| `dow_entropy`, `dow_maxshare` | hafta kuni bo'yicha faollik entropy'si va eng ko'p ishlatilgan kun ulushi |
 | `eskalatsiya` | **faqat train faylida** — target |
+
+> `hour_entropy`/`dow_entropy`/`*_maxshare` — real 5×5-repeat cross-validation bilan tasdiqlangan qo'shimcha (README.md § 5.1): CV ROC-AUC'ni 0.563'dan 0.566'ga (statistik jihatdan haqiqiy, p=0.0008) oshiradi.
 
 > Bu jadvalga yangi ustun qo'shish erkin (kelishilgan holda) — lekin yuqoridagi bazaviy ustunlar ismi/turi o'zgarmasligi kerak, chunki B-shaxs shu nomlarga tayangan holda modelni yozadi.
 

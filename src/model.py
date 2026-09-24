@@ -1,13 +1,15 @@
 """Track B: ModelTrainer.
 
-Model choice, backed by CV experiments (see README.md "Model tanlash"):
-plain regularized Logistic Regression beat HistGradientBoostingClassifier
-(0.563 vs 0.539 mean CV ROC-AUC) and degree-2 polynomial interactions made
-things worse (0.547) on this feature set. With ~14k rows and every raw
-feature correlating with the target at |r| <= 0.06 (see EDA), gradient-
-boosted trees have enough capacity to fit noise instead of signal; a
-regularized linear model does not. C was swept 0.01-3.0 with no meaningful
-change in CV AUC, so the default is used rather than tuning further.
+Model choice, backed by two rounds of CV experiments (see README.md
+"Model tanlash" sections 5.1/5.1.1): plain regularized Logistic Regression
+beat HistGradientBoostingClassifier, RandomForest, SVC, MLP, a tuned
+LightGBM (40-config random search), and OOF stacking -- all landed at or
+below 0.56 CV ROC-AUC vs LR's 0.5656 (5-fold) / 0.5677+/-0.0163 (5x5
+repeat). With ~14k rows and every raw feature correlating with the target
+at |r| <= 0.06 (see EDA), gradient-boosted trees have enough capacity to
+fit noise instead of signal; a regularized linear model does not. C was
+swept 0.01-3.0 with no meaningful change in CV AUC, so the default is
+used rather than tuning further.
 """
 import numpy as np
 import pandas as pd

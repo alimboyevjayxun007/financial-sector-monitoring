@@ -45,7 +45,7 @@ Maqsad: ikki kishi GitHub orqali **bir-birini kutmasdan, parallel** ishlashi. Bu
 
 1. **Boshlash uchun mock feature'lar** — `src/config.py`dagi `make_dummy_features(signals_df)` funksiyasi tasodifiy/oddiy agregatsiya bilan shartnomadagi ustunlarni generatsiya qiladi. Shu bilan Track A tugashini kutmasdan model pipeline'ni qurishingiz, test qilishingiz mumkin.
 
-2. **Model (`src/model.py`)** — yakuniy natija: gradient boosting emas, **Logistic Regression** tanlandi (real CV'da 0.563 vs HGB'ning 0.539 AUC'i — batafsili README.md § 5.1). Xulosa: bu maydonda "murakkabroq model" degani "yaxshiroq" degani emas, doim bir nechta model turini real CV bilan solishtirib ko'ring.
+2. **Model (`src/model.py`)** — yakuniy natija: gradient boosting emas, **Logistic Regression** tanlandi (real CV'da 0.5656 vs HGB'ning 0.539 AUC'i, keyinchalik tuned LightGBM ham 0.547da qoldi — batafsili README.md § 5.1/5.1.1). Xulosa: bu maydonda "murakkabroq model" degani "yaxshiroq" degani emas, doim bir nechta model turini real CV bilan solishtirib ko'ring.
    - `train(features_df, target) -> Model`
    - `cross_validate(features_df, target) -> float` — Stratified K-Fold (imbalance uchun), ROC-AUC
    - Class imbalance uchun `class_weight="balanced"` ishlatildi

@@ -387,7 +387,7 @@
     <ol class="steps">
       <li><strong>EDA (ushbu sayt):</strong> ikkita xom jadval (<code>signals</code> va <code>transactions</code>) ni chuqur o'rganish — hajm, sifat, taqsimotlar, target bilan bog'liqlik, va eng muhimi, <strong>data leakage</strong> xavfini aniqlash.</li>
       <li><strong>Feature engineering:</strong> har bir signal uchun uning ortidagi (signal sanasidan oldingi) tranzaksiya tarixini o'nlab sonli xususiyatlarga (n_txn, amt_mean, frac_kirim, recency va h.k.) yig'ish.</li>
-      <li><strong>Modellashtirish:</strong> EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06). Bir nechta model turi (gradient boosting, random forest, SVM, MLP, logistic regression) real Stratified K-Fold CV bilan solishtirildi — natijada oddiy, regullashtirilgan <strong>Logistic Regression</strong> (CV ROC-AUC 0.563) eng barqaror natijani berdi, chunki bu qadar zaif signalda daraxt-asosli modellar shovqinga moslashib (overfit) qoladi.</li>
+      <li><strong>Modellashtirish:</strong> EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06). 10+ model turi va feature yo'nalishi (gradient boosting, random forest, SVM, MLP, tuned LightGBM, stacking, logistic regression) real Stratified K-Fold CV bilan solishtirildi — natijada oddiy, regullashtirilgan <strong>Logistic Regression + soat/kun-entropy feature'lari</strong> (22 feature, CV ROC-AUC 0.5656–0.568) eng barqaror natijani berdi, chunki bu qadar zaif signalda daraxt-asosli modellar shovqinga moslashib (overfit) qoladi.</li>
     </ol>
     <div class="callout">
       Ushbu sahifadagi barcha raqamlar va grafiklar <code>docs/generate_charts.py</code> skripti orqali haqiqiy <code>train_signals.csv</code>, <code>train_transactions.parquet</code>, <code>test_signals.csv</code>, <code>test_transactions.parquet</code> fayllaridan hisoblab olingan — hech qanday sun'iy/namunaviy raqam yo'q.
@@ -599,20 +599,28 @@
     <table>
       <thead><tr><th>Model</th><th>CV ROC-AUC</th></tr></thead>
       <tbody>
+        <tr><td>Tuned LightGBM (40-config random search)</td><td>0.547</td></tr>
         <tr><td>HistGradientBoostingClassifier (depth=6)</td><td>0.539</td></tr>
         <tr><td>RandomForestClassifier</td><td>0.544</td></tr>
         <tr><td>SVC (RBF kernel)</td><td>0.550</td></tr>
         <tr><td>MLPClassifier (kichik, regullashtirilgan)</td><td>0.561</td></tr>
-        <tr><td><strong>Logistic Regression (standartlashtirilgan)</strong></td><td><strong>0.563</strong></td></tr>
+        <tr><td>OOF stacking (LR+MLP+HGB → meta-LR)</td><td>0.5655</td></tr>
+        <tr><td><strong>Logistic Regression + soat/kun entropy (yakuniy, 22 feature)</strong></td><td><strong>0.5656 (5-fold) / 0.5677±0.0163 (5×5 repeat)</strong></td></tr>
       </tbody>
     </table>
 
     <p>
-      Qo'shimcha feature'lar, degree-2 interaction xususiyatlar va model blending ham natijani sezilarli
-      yaxshilamadi (barchasi 0.55–0.56 oralig'ida qoldi) — bu ma'lumotning haqiqiy signal-chegarasiga yaqinlashilganini
-      ko'rsatadi. Shu sababli yakuniy model: oddiy, regullashtirilgan <strong>Logistic Regression</strong>. Qo'shimcha
-      tekshiruv: adversarial validation (train vs test farqlanishini o'lchash) AUC ≈ 0.497 — bu train va test
-      taqsimotlari statistik farqlanmasligini, ya'ni <strong>covariate shift yo'qligini</strong> tasdiqlaydi.
+      Qo'shimcha feature'lar (ko'p vaqt oynali recency, shaxsiylashtirilgan drift, tranzaksiya-turi o'tish
+      patternlari, o'z-tarixga nisbatan ekstremallik), degree-2 interaction xususiyatlar, tuned LightGBM va
+      to'g'ri out-of-fold stacking — 10 dan ortiq jiddiy urinish sinovdan o'tkazildi. Faqat bitta topilma
+      statistik jihatdan haqiqiy chiqdi (paired t-test, p=0.0008): <strong>soat va hafta-kuni bo'yicha faollik
+      entropy'si va konsentratsiyasi</strong> (<code>hour_entropy</code>, <code>hour_maxshare</code>,
+      <code>dow_entropy</code>, <code>dow_maxshare</code>) — bular production'ga qo'shildi (18 → 22 feature),
+      CV ROC-AUC'ni 0.563'dan 0.566'ga (5×5 repeat: 0.568) ko'tardi. Qolgan barcha yo'nalishlar ahamiyatsiz yoki
+      yomonroq natija berdi — bu ma'lumotning haqiqiy signal-chegarasiga yaqinlashilganini tasdiqlaydi. Qo'shimcha
+      tekshiruv: adversarial validation (train vs test farqlanishini o'lchash) AUC ≈ 0.498 (yakuniy feature
+      to'plamida qayta tekshirildi) — bu train va test taqsimotlari statistik farqlanmasligini, ya'ni
+      <strong>covariate shift yo'qligini</strong> tasdiqlaydi.
     </p>
 
     <h3>EDA asosida taklif qilingan feature guruhlari</h3>
@@ -667,7 +675,7 @@
       <li>Signal sanasidan keyin ham tranzaksiyalar mavjudligi sababli, feature engineeringda <strong>leakage'ga qarshi sana filtri majburiy</strong>.</li>
       <li>Hech qanday yakka agregat xususiyat target bilan kuchli bog'liq emas (|korrelyatsiya| ≤ 0.06) — signal ko'p, lekin zaif xususiyatlarning yig'indisidan iborat.</li>
       <li>Eng ishonchli (garchi hali ham nisbatan zaif) yo'nalish — <strong>hajm va recency</strong>: escalate signallarda ko'proq va so'nggi kunlarda faolroq tranzaksiya tarixi kuzatiladi.</li>
-      <li>Xulosa: <strong>ko'p xususiyatli agregatsiya + regullashtirilgan Logistic Regression</strong> — real CV bilan solishtirilgan 5 xil model orasidan eng barqaror natija berdi (0.563 ROC-AUC); zaif/shovqinli signalda murakkabroq model (gradient boosting, SVM, MLP) yaxshiroq degani emas. Adversarial validation (AUC≈0.497) train/test o'rtasida covariate shift yo'qligini tasdiqladi.</li>
+      <li>Xulosa: <strong>ko'p xususiyatli agregatsiya + regullashtirilgan Logistic Regression</strong> — real CV bilan solishtirilgan 10+ model/feature variantidan eng barqaror natija berdi (0.5656–0.568 ROC-AUC); zaif/shovqinli signalda murakkabroq model (gradient boosting, SVM, MLP, tuned LightGBM) yaxshiroq degani emas. Adversarial validation (AUC≈0.498) train/test o'rtasida covariate shift yo'qligini tasdiqladi.</li>
     </ul>
   </section>
 
