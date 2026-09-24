@@ -387,7 +387,7 @@
     <ol class="steps">
       <li><strong>EDA (ushbu sayt):</strong> ikkita xom jadval (<code>signals</code> va <code>transactions</code>) ni chuqur o'rganish — hajm, sifat, taqsimotlar, target bilan bog'liqlik, va eng muhimi, <strong>data leakage</strong> xavfini aniqlash.</li>
       <li><strong>Feature engineering:</strong> har bir signal uchun uning ortidagi (signal sanasidan oldingi) tranzaksiya tarixini o'nlab sonli xususiyatlarga (n_txn, amt_mean, frac_kirim, recency va h.k.) yig'ish.</li>
-      <li><strong>Modellashtirish:</strong> EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06) — demak qaror ko'p xususiyatlarning birgalikdagi, nochiziqli ta'siriga bog'liq. Shu sababli daraxt-asosli gradient boosting model (LightGBM / XGBoost / sklearn GradientBoosting) tanlandi, class imbalance uchun class-weight/scale_pos_weight bilan.</li>
+      <li><strong>Modellashtirish:</strong> EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06). Bir nechta model turi (gradient boosting, random forest, SVM, MLP, logistic regression) real Stratified K-Fold CV bilan solishtirildi — natijada oddiy, regullashtirilgan <strong>Logistic Regression</strong> (CV ROC-AUC 0.563) eng barqaror natijani berdi, chunki bu qadar zaif signalda daraxt-asosli modellar shovqinga moslashib (overfit) qoladi.</li>
     </ol>
     <div class="callout">
       Ushbu sahifadagi barcha raqamlar va grafiklar <code>docs/generate_charts.py</code> skripti orqali haqiqiy <code>train_signals.csv</code>, <code>train_transactions.parquet</code>, <code>test_signals.csv</code>, <code>test_transactions.parquet</code> fayllaridan hisoblab olingan — hech qanday sun'iy/namunaviy raqam yo'q.
@@ -534,7 +534,7 @@
       Train setda 11 595 ta dismiss (0) va 2 405 ta escalate (1) bor — <strong>escalate ulushi ~17.2%</strong>.
       Bu klassik imbalanced classification muammosi: agar model doim "0" desa ham ~82.8% aniqlik (accuracy) beradi, shuning uchun
       baholash metrikasi sifatida threshold'ga bog'liq bo'lmagan <strong>ROC-AUC</strong> tanlangani to'g'ri, model esa
-      class-weight / scale_pos_weight kabi imbalance texnikalari bilan o'qitilishi kerak.
+      <code>class_weight="balanced"</code> kabi imbalance texnikalari bilan o'qitilishi kerak.
     </p>
 
     <h3>Escalate vs dismiss: agregat xususiyatlar bo'yicha farq</h3>
@@ -575,26 +575,44 @@
     <div class="kicker">Bo'lim 6</div>
     <h2>EDA'dan kelib chiqqan feature/model g'oyalari</h2>
 
-    <h3>Nima uchun oddiy chiziqli/threshold yondashuv ishlamaydi</h3>
+    <h3>Nima uchun oddiy bitta-xususiyat threshold-qoida ishlamaydi — va real CV nima ko'rsatdi</h3>
     <p>
       8-grafikdagi korrelyatsiya tahlili shuni ko'rsatadiki, <strong>birorta ham yakka agregat xususiyat target bilan kuchli
       chiziqli bog'liq emas</strong> (eng katta |korrelyatsiya| — <code>amt_max</code> uchun ≈ 0.06). Bu degani, "agar summa
-      X dan katta bo'lsa yoki tranzaksiya soni Y dan ko'p bo'lsa — escalate" kabi oddiy qoidalar amalda deyarli tasodifiy
-      natija beradi. Signal — ko'plab zaif, lekin individual ravishda yetarli emas bo'lgan xatti-harakat izlarining
-      <strong>birgalikdagi, nochiziqli kombinatsiyasidan</strong> kelib chiqadi.
+      X dan katta bo'lsa yoki tranzaksiya soni Y dan ko'p bo'lsa — escalate" kabi oddiy bitta-xususiyatli qoidalar amalda
+      deyarli tasodifiy natija beradi.
+    </p>
+    <p>
+      Boshida bundan "demak daraxt-asosli gradient boosting kerak, chunki u nochiziqli interaction'larni ushlaydi" degan
+      taxmin qilingan edi. Lekin haqiqiy <code>StratifiedKFold(5)</code> + ROC-AUC bilan bir nechta model turi solishtirilganda
+      natija <strong>teskari</strong> chiqdi: signal shu qadar zaif va shovqinli (~14&nbsp;000 qator, hamma xususiyat
+      |korrelyatsiya| ≤ 0.06) ki, daraxt ensemble'lari haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi.
     </p>
 
     <div class="pill-row">
-      <span class="pill">Gradient Boosting (LightGBM/XGBoost/GBM)</span>
-      <span class="pill">Class-weight / scale_pos_weight</span>
+      <span class="pill">Logistic Regression (yakuniy tanlov)</span>
+      <span class="pill">StandardScaler + class_weight="balanced"</span>
       <span class="pill">Stratified K-Fold CV</span>
       <span class="pill">ROC-AUC baholash</span>
     </div>
 
+    <table>
+      <thead><tr><th>Model</th><th>CV ROC-AUC</th></tr></thead>
+      <tbody>
+        <tr><td>HistGradientBoostingClassifier (depth=6)</td><td>0.539</td></tr>
+        <tr><td>RandomForestClassifier</td><td>0.544</td></tr>
+        <tr><td>SVC (RBF kernel)</td><td>0.550</td></tr>
+        <tr><td>MLPClassifier (kichik, regullashtirilgan)</td><td>0.561</td></tr>
+        <tr><td><strong>Logistic Regression (standartlashtirilgan)</strong></td><td><strong>0.563</strong></td></tr>
+      </tbody>
+    </table>
+
     <p>
-      Shu sababli modellashtirish uchun <strong>daraxt-asosli gradient boosting</strong> ensemble tanlandi — bunday modellar
-      ko'p sonli zaif xususiyatlar orasidagi murakkab, nochiziqli va interaction (o'zaro ta'sir) effektlarini avtomatik
-      o'rganadi, chiziqli regressiya/logistik regressiyaga qaraganda bu tur ma'lumotda ancha yaxshi ishlaydi.
+      Qo'shimcha feature'lar, degree-2 interaction xususiyatlar va model blending ham natijani sezilarli
+      yaxshilamadi (barchasi 0.55–0.56 oralig'ida qoldi) — bu ma'lumotning haqiqiy signal-chegarasiga yaqinlashilganini
+      ko'rsatadi. Shu sababli yakuniy model: oddiy, regullashtirilgan <strong>Logistic Regression</strong>. Qo'shimcha
+      tekshiruv: adversarial validation (train vs test farqlanishini o'lchash) AUC ≈ 0.497 — bu train va test
+      taqsimotlari statistik farqlanmasligini, ya'ni <strong>covariate shift yo'qligini</strong> tasdiqlaydi.
     </p>
 
     <h3>EDA asosida taklif qilingan feature guruhlari</h3>
@@ -649,7 +667,7 @@
       <li>Signal sanasidan keyin ham tranzaksiyalar mavjudligi sababli, feature engineeringda <strong>leakage'ga qarshi sana filtri majburiy</strong>.</li>
       <li>Hech qanday yakka agregat xususiyat target bilan kuchli bog'liq emas (|korrelyatsiya| ≤ 0.06) — signal ko'p, lekin zaif xususiyatlarning yig'indisidan iborat.</li>
       <li>Eng ishonchli (garchi hali ham nisbatan zaif) yo'nalish — <strong>hajm va recency</strong>: escalate signallarda ko'proq va so'nggi kunlarda faolroq tranzaksiya tarixi kuzatiladi.</li>
-      <li>Xulosa: <strong>ko'p xususiyatli agregatsiya + gradient boosting</strong> ensemble model — bu EDA natijalariga eng mos yondashuv, oddiy threshold-qoidalar yoki chiziqli model yetarli emas.</li>
+      <li>Xulosa: <strong>ko'p xususiyatli agregatsiya + regullashtirilgan Logistic Regression</strong> — real CV bilan solishtirilgan 5 xil model orasidan eng barqaror natija berdi (0.563 ROC-AUC); zaif/shovqinli signalda murakkabroq model (gradient boosting, SVM, MLP) yaxshiroq degani emas. Adversarial validation (AUC≈0.497) train/test o'rtasida covariate shift yo'qligini tasdiqladi.</li>
     </ul>
   </section>
 

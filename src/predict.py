@@ -8,6 +8,12 @@ from src.data_loading import load_signals
 
 
 def predict(model, features_df: pd.DataFrame) -> pd.DataFrame:
+    missing = set(config.FEATURE_COLUMNS) - set(features_df.columns)
+    if missing:
+        raise ValueError(f"features_df is missing required columns: {sorted(missing)}")
+    if features_df[config.FEATURE_COLUMNS].isna().any().any():
+        raise ValueError("features_df has NaN values in feature columns — check the feature pipeline")
+
     proba = model.predict_proba(features_df[config.FEATURE_COLUMNS])[:, 1]
     return pd.DataFrame({config.ID_COL: features_df[config.ID_COL], "ehtimollik": proba})
 

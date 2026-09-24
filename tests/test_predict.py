@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from src import config
 from src.model import train
@@ -40,6 +41,29 @@ def test_predict_probabilities_within_unit_range():
 
     assert preds["ehtimollik"].between(0, 1).all()
     assert preds["ehtimollik"].notna().all()
+
+
+def test_predict_rejects_missing_feature_columns():
+    ids = [f"SG_{i}" for i in range(20)]
+    train_df = _fake_features(ids)
+    y = pd.Series(([0] * 16) + ([1] * 4))
+    model = train(train_df[config.FEATURE_COLUMNS], y)
+
+    incomplete = _fake_features(ids).drop(columns=[config.FEATURE_COLUMNS[0]])
+    with pytest.raises(ValueError, match="missing required columns"):
+        predict(model, incomplete)
+
+
+def test_predict_rejects_nan_in_features():
+    ids = [f"SG_{i}" for i in range(20)]
+    train_df = _fake_features(ids)
+    y = pd.Series(([0] * 16) + ([1] * 4))
+    model = train(train_df[config.FEATURE_COLUMNS], y)
+
+    with_nan = _fake_features(ids)
+    with_nan.loc[0, config.FEATURE_COLUMNS[0]] = float("nan")
+    with pytest.raises(ValueError, match="NaN"):
+        predict(model, with_nan)
 
 
 def test_real_train_and_predict_end_to_end_if_features_available():

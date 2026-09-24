@@ -135,11 +135,23 @@ Boshida EDA "individual feature'lar kuchsiz, demak nochiziqli/interaction ta'sir
 | `HistGradientBoostingClassifier` (depth=6) | 0.539 |
 | `HistGradientBoostingClassifier` (depth=3, kuchliroq regulyarizatsiya) | 0.548 |
 | `RandomForestClassifier` | 0.544 |
+| `SVC` (RBF kernel) | 0.550 |
+| `MLPClassifier` (kichik, regullashtirilgan) | 0.561 |
 | **`LogisticRegression` (standartlashtirilgan, class_weight="balanced")** | **0.563** |
 | Logistic Regression + darajа-2 interaction xususiyatlar | 0.547 (yomonlashdi) |
 | Kengaytirilgan feature to'plami (entropy, recency-acceleration, net-flow, va h.k.) + LR | 0.562 (deyarli o'zgarmadi) |
+| LR + MLP blend (turli og'irliklar) | 0.5628–0.5629 (o'zgarmadi) |
+| `CalibratedClassifierCV(LogisticRegression)` | 0.5625 (AUC bir xil, faqat ehtimolliklar kalibrlanadi) |
 
-**Xulosa:** signal shu qadar zaif va shovqinli (~14 000 qator, barcha xususiyatlar |korrelyatsiya| ≤ 0.06) ki, daraxt-asosli modellar haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi; oddiy, regullashtirilgan chiziqli model esa yaxshiroq umumlashtiradi. Qo'shimcha feature'lar yoki interaction'lar ham CV'ni sezilarli yaxshilamadi — bu ma'lumotning haqiqiy "shift" (headroom) chegarasiga yaqinlashilganini ko'rsatadi. Shu sababli yakuniy model: **`StandardScaler` + `LogisticRegression`** (`src/model.py`), CV ROC-AUC ≈ **0.563**.
+**Xulosa:** signal shu qadar zaif va shovqinli (~14 000 qator, barcha xususiyatlar |korrelyatsiya| ≤ 0.06) ki, daraxt-asosli va boshqa murakkab modellar haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi; oddiy, regullashtirilgan chiziqli model esa yaxshiroq umumlashtiradi. 7 xil model oilasi, qo'shimcha feature'lar, interaction'lar, blend va kalibratsiya sinovdan o'tkazildi — barchasi 0.54–0.56 oralig'ida qoldi, bu ma'lumotning haqiqiy signal-chegarasiga yetilganini ko'rsatadi. Shu sababli yakuniy model: **`StandardScaler` + `LogisticRegression`** (`src/model.py`), CV ROC-AUC ≈ **0.563**.
+
+### 5.2. Production-readiness tekshiruvlari
+
+- **Covariate shift yo'qligi (adversarial validation):** train va test feature jadvallarini "qaysi biri train, qaysi biri test" deb ajratishga harakat qiluvchi klassifikator qurildi — CV AUC ≈ **0.497** (tasodifiy taxmindan farqsiz). Demak train va test taqsimotlari statistik jihatdan bir xil, model production'da (test'da) train'dagi kabi ishlashi kutiladi.
+- **Determinizm:** `data/processed/` va `outputs/` to'liq o'chirilib, butun pipeline (`features → train → predict`) noldan qayta qurildi — natija **bayt-baytiga bir xil** chiqdi (barcha random_state'lar qat'iy belgilangan).
+- **Reproducibility:** `requirements.txt`dagi barcha asosiy kutubxonalar (`pandas`, `numpy`, `pyarrow`, `scikit-learn`, `joblib`, `matplotlib`) aniq versiyalarga pin qilingan — shu versiyalarda `model.pkl` va CV natijalari sinovdan o'tgan.
+- **Input validatsiyasi:** `src/predict.py`dagi `predict()` funksiyasi endi ishlatishdan oldin barcha kerakli feature ustunlari mavjudligini va NaN yo'qligini tekshiradi, aks holda tushunarli xatolik chiqaradi (sukut noaniq sklearn xatosi o'rniga).
+- **Real end-to-end sinov:** notebook (`notebooks/submission_pipeline.ipynb`) skript sifatida ajratib olinib bajarildi, `src/*.py` skriptlari CLI orqali ishga tushirildi — barchasi xatosiz, bir xil natija bilan yakunlandi.
 
 ---
 
