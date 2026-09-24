@@ -61,7 +61,7 @@ flowchart LR
     G --> H["5. Submission Writer"]
     H --> I[("team_<TEAM_ID>.csv")]
     B --> J["6. EDA / Insights\n(EDAReport)"]
-    J --> K[("eda_site/\n(public website)")]
+    J --> K[("docs/\n(public website)")]
 ```
 
 **Nima uchun shunday bo'lingan?** `data/processed/*.parquet` — bu ikki jamoa a'zosi o'rtasidagi **"shartnoma" (contract)**. Feature qismini yozayotgan odam va model qismini yozayotgan odam bir-birini kutmasdan ishlashi uchun, ular faqat shu faylning qanday ustunlardan iborat bo'lishi kerakligini oldindan kelishib olishadi (pastda, bo'lim 6da). Shundan keyin ikkalasi ham parallel ishlay oladi.
@@ -106,7 +106,7 @@ classDiagram
     class EDAReport {
         +generate(signals_df, transactions_df)
         Grafik va topilmalarni tayyorlaydi,
-        eda_site/ uchun material beradi
+        docs/ uchun material beradi
     }
 
     DataLoader --> FeatureBuilder : signals + transactions

@@ -18,7 +18,7 @@ Maqsad: ikki kishi GitHub orqali **bir-birini kutmasdan, parallel** ishlashi. Bu
 
 ## TRACK A — Data, Feature Engineering & EDA (≈50%) — ✅ BAJARILDI
 
-**Egallaydigan fayllar:** `src/data_loading.py`, `src/features.py`, `src/eda.py`, `eda_site/**`, `data/processed/*` (generatsiya qiladi)
+**Egallaydigan fayllar:** `src/data_loading.py`, `src/features.py`, `src/eda.py`, `docs/**`, `data/processed/*` (generatsiya qiladi)
 
 1. **Data Loading (`src/data_loading.py`)**
    - `load_signals(path) -> DataFrame`, `load_transactions(path) -> DataFrame`
@@ -30,7 +30,7 @@ Maqsad: ikki kishi GitHub orqali **bir-birini kutmasdan, parallel** ishlashi. Bu
    - Qo'shimcha g'oyalar (ixtiyoriy, vaqt qolsa): kunlik/haftalik trend, oxirgi N ta tranzaksiyaning statistikasi, tur bo'yicha entropy, kirim/chiqim nisbat trendi
    - `train_features.parquet` va `test_features.parquet`ni `data/processed/`ga yozadi
 
-3. **EDA va sayt (`src/eda.py` + `eda_site/`)**
+3. **EDA va sayt (`src/eda.py` + `docs/`)**
    - Grafiklar: target taqsimoti, vaqt bo'yicha faollik, kirim/chiqim, tur bo'yicha taqsimot, summalar taqsimoti, escalate vs dismiss farqlari, signal oldidan faollik
    - Sayt: Streamlit / statik HTML / GitHub Pages — README talab qilgan 7 ta bo'limni albatta qamrab olishi kerak (yondashuv tavsifi, dataset umumiy ko'rinishi, EDA vizuallari, kuzatuvlar, target taqsimoti tahlili, EDA'dan kelib chiqqan feature g'oyalari, xulosa)
    - Saytni jamoat uchun ochiq linkka joylashtirish (Streamlit Cloud / GitHub Pages / Vercel / Netlify)
@@ -71,7 +71,7 @@ Har bir kishi o'z trekida ishlaganda, o'z Claude Code sessiyasini **manager** si
 
 - **Manager** (asosiy sessiya): Opus 5, high effort — trek ichidagi rejalashtirish, fayllar orasidagi bog'liqlikni kuzatish, PR tayyorlash
 - **Subagentlar** (parallel bajariladigan mayda vazifalar uchun): Sonnet 5, medium effort — masalan:
-  - Track A: bitta subagent grafiklar chizsin, boshqa subagent `eda_site` HTML/Streamlit qismini yozsin — ikkalasi parallel
+  - Track A: bitta subagent grafiklar chizsin, boshqa subagent `docs` HTML/Streamlit qismini yozsin — ikkalasi parallel
   - Track B: bitta subagent turli model variantlarini (LightGBM vs XGBoost vs sklearn GBM) sinab ko'rsin, boshqasi `predict.py`/validatsiya qismini yozsin
 
 Bu — ixtiyoriy tezlashtirish usuli; asosiy talab shu ikki trekni GitHub orqali mustaqil olib borishdir.

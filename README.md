@@ -64,7 +64,7 @@ WUIT Hackathon/
 │   ├── model.py                       # ModelTrainer — Logistic Regression  (B-track)
 │   ├── train.py                       # o'qitish + cross-validation skripti  (B-track)
 │   └── predict.py                     # Predictor + SubmissionWriter  (B-track)
-├── eda_site/                          # majburiy EDA veb-sayti  (A-track)
+├── docs/                               # majburiy EDA veb-sayti (GitHub Pages source)  (A-track)
 │   ├── index.html                     # statik, self-contained sayt (7 bo'lim)
 │   ├── generate_charts.py             # grafiklarni real ma'lumotdan generatsiya qiladi
 │   └── assets/*.png                   # 8 ta EDA grafigi
@@ -124,7 +124,7 @@ Chiqish fayli talablari (majburiy):
 - **Yo'nalish va tur aralashmasi deyarli farq qilmaydi**: `frac_kirim`, `frac_karta`, `frac_xalqaro` kabi ulushlar ikkala guruhda deyarli bir xil — bular yakka holda kuchli ajratuvchi emas, lekin boshqa xususiyatlar bilan birga (interaction) foydali bo'lishi mumkin.
 - **Xulosa**: signal juda zaif va shovqinli, ko'plab xatti-harakat izlaridan yig'iladi → **ko'p xususiyatli agregatsiya** zarur, lekin quyida ko'rsatilganidek, model tanlashda "murakkabroq = yaxshiroq" degani emas.
 
-To'liq grafiklar va tahlil `eda_site/` saytida taqdim etiladi.
+To'liq grafiklar va tahlil `docs/` saytida taqdim etiladi.
 
 ### 5.1. Model tanlash — real CV tajribasi (kutilmagan natija)
 

@@ -2,8 +2,8 @@
 EDA chart generator — WUIT Hackathon, Fintech Track (AML signal escalation).
 
 Bu skript xom ma'lumotlarni (fintech_track_data/fintech_data/*) o'qib,
-eda_site/index.html sahifasida ishlatiladigan barcha PNG grafiklarni
-eda_site/assets/ papkasiga generatsiya qiladi.
+docs/index.html sahifasida ishlatiladigan barcha PNG grafiklarni
+docs/assets/ papkasiga generatsiya qiladi.
 
 Ishga tushirish:
     python3 generate_charts.py

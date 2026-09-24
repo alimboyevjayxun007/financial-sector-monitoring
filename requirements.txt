@@ -2,7 +2,7 @@ pandas
 numpy
 pyarrow
 scikit-learn
-lightgbm
+joblib
 matplotlib
 jupyter
-streamlit
+pytest

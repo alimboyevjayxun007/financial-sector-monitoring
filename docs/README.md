@@ -4,6 +4,10 @@ Bu papka majburiy EDA veb-saytining manba kodini saqlaydi: statik, offline ishla
 HTML sahifa (`index.html`) + uni generatsiya qilgan Python skripti (`generate_charts.py`)
 va unga tegishli grafiklar (`assets/*.png`).
 
+Papka ataylab `docs/` deb nomlangan (`eda_site/` emas) — GitHub Pages faqat `/ (root)`
+yoki `/docs` papkasini source sifatida tanlashga ruxsat beradi, shu sabab bu joylashuv
+hech qanday qo'shimcha nusxalashsiz to'g'ridan-to'g'ri publish qilinadi.
+
 Sayt quyidagi 7 bo'limni qamrab oladi (TASKS.md → Track A):
 
 1. Yondashuvning qisqacha tavsifi
@@ -17,11 +21,11 @@ Sayt quyidagi 7 bo'limni qamrab oladi (TASKS.md → Track A):
 ## Fayllar
 
 ```
-eda_site/
+docs/
 ├── index.html            # sayt (to'liq self-contained, tashqi internet/CDN kerak emas)
-├── generate_charts.py     # grafiklarni haqiqiy ma'lumotlardan generatsiya qiluvchi skript
+├── generate_charts.py    # grafiklarni haqiqiy ma'lumotlardan generatsiya qiluvchi skript
 ├── assets/                # generate_charts.py chiqargan PNG grafiklar (01..08)
-└── README.md               # ushbu fayl
+└── README.md              # ushbu fayl
 ```
 
 ## Grafiklarni qayta generatsiya qilish
@@ -30,7 +34,7 @@ Kerakli kutubxonalar (`pandas`, `numpy`, `pyarrow`, `matplotlib`) loyihaning tiz
 python3'ida allaqachon o'rnatilgan — alohida virtualenv yoki `pip install` shart emas.
 
 ```bash
-cd eda_site
+cd docs
 python3 generate_charts.py
 ```
 
@@ -42,17 +46,17 @@ shu orqali natijalarning haqiqiy ma'lumotdan kelib chiqqanini tasdiqlash mumkin.
 
 ## Saytni ko'rish
 
-**Lokal:** `eda_site/index.html` faylini brauzerda to'g'ridan-to'g'ri oching
+**Lokal:** `docs/index.html` faylini brauzerda to'g'ridan-to'g'ri oching
 (server yoki build qadam kerak emas — sahifa to'liq self-contained, inline CSS,
 tashqi CDN'ga bog'liqlik yo'q).
 
-**GitHub Pages orqali (keyinchalik joylashtirish uchun):**
-1. Repozitoriy sozlamalarida **Settings → Pages** bo'limiga o'ting.
-2. Source sifatida `main` branch, papka sifatida `/eda_site` (yoki `/` va
-   `eda_site/index.html`ni repo root'ga ko'chirish) tanlang.
-3. Bir necha daqiqadan so'ng sayt `https://<username>.github.io/<repo>/` (yoki
-   `/eda_site/`) manzilida ochiladi.
+**GitHub Pages orqali (repo egasi bir marta yoqadi, keyin doim ishlaydi):**
+1. Repozitoriy sahifasida **Settings → Pages** bo'limiga o'ting.
+2. "Build and deployment" → Source: **Deploy from a branch**.
+3. Branch: **main**, papka: **/docs** — Save bosing.
+4. Bir necha daqiqadan so'ng sayt `https://<username>.github.io/<repo>/` manzilida
+   ochiladi (GitHub bu URL'ni Pages sozlamalari sahifasida ham ko'rsatadi).
 
-Muqobil variant: `eda_site/` papkasini Netlify/Vercel'ga drag-and-drop qilish
-orqali ham bir zumda public linkka joylashtirish mumkin (build buyrug'i kerak
-emas, chunki sahifa allaqachon statik HTML).
+Muqobil variant: `docs/` papkasini Netlify/Vercel'ga drag-and-drop qilish orqali ham
+bir zumda public linkka joylashtirish mumkin (build buyrug'i kerak emas, chunki sahifa
+allaqachon statik HTML).
