@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDA hisoboti — AML Signal Escalation (Fintech Track)</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card-bg: #ffffff;
+    --text: #1a1f2b;
+    --muted: #5b6472;
+    --border: #e4e7ee;
+    --accent: #4f46e5;
+    --accent-2: #ef4444;
+    --accent-3: #10b981;
+    --code-bg: #0f172a;
+    --code-text: #e2e8f0;
+    --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .topbar {
+    background: linear-gradient(120deg, #1e1b4b, #3730a3 55%, #4f46e5);
+    color: white;
+    padding: 48px 20px 40px;
+  }
+
+  .topbar-inner {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .topbar h1 {
+    margin: 0 0 10px;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+  }
+
+  .topbar p {
+    margin: 0;
+    color: #c7d2fe;
+    font-size: 1.02rem;
+    max-width: 720px;
+  }
+
+  .badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+
+  .badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    color: #e0e7ff;
+  }
+
+  nav.toc {
+    max-width: 980px;
+    margin: -22px auto 0;
+    padding: 0 20px;
+  }
+
+  nav.toc ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px;
+    margin: 0;
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  nav.toc a {
+    display: block;
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.86rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  nav.toc a:hover { background: #eef0ff; }
+
+  main {
+    max-width: 980px;
+    margin: 32px auto 80px;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px clamp(18px, 4vw, 36px);
+    box-shadow: var(--shadow);
+    scroll-margin-top: 16px;
+  }
+
+  section .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.76rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  section h2 {
+    margin: 0 0 16px;
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+  }
+
+  section h3 {
+    font-size: 1.02rem;
+    margin: 22px 0 8px;
+  }
+
+  p { color: var(--text); }
+  section p, section li { color: #2c3342; }
+
+  .muted { color: var(--muted); }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 18px 0;
+  }
+
+  .stat {
+    background: #f8f9fd;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+
+  .stat .num {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat .lbl {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    background: #f8f9fd;
+    font-weight: 700;
+    color: #374151;
+  }
+
+  code, .code-inline {
+    background: #eef0f6;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 0.88em;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+
+  pre code { background: none; padding: 0; color: inherit; }
+
+  .schema-diagram {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+
+  .schema-box {
+    flex: 1 1 260px;
+    border: 1px dashed #c7cbe0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #fafbff;
+  }
+
+  .schema-box h4 {
+    margin: 0 0 8px;
+    font-size: 0.92rem;
+    color: var(--accent);
+  }
+
+  .schema-box ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.86rem;
+  }
+
+  .schema-link {
+    align-self: center;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    flex: 0 0 auto;
+  }
+
+  figure {
+    margin: 18px 0;
+  }
+
+  figure img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  figcaption {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 20px;
+  }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #f4f4ff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.94rem;
+    margin: 14px 0;
+  }
+
+  .callout.warn {
+    border-left-color: #f59e0b;
+    background: #fffaf0;
+  }
+
+  .callout.danger {
+    border-left-color: var(--accent-2);
+    background: #fef2f2;
+  }
+
+  .pill-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+
+  .pill {
+    background: #eef0ff;
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  ol.steps {
+    padding-left: 20px;
+  }
+
+  ol.steps li { margin-bottom: 8px; }
+
+  footer {
+    max-width: 980px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  a { color: var(--accent); }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1117;
+      --card-bg: #171a23;
+      --text: #e6e9f0;
+      --muted: #98a1b3;
+      --border: #262b38;
+      --code-bg: #05070d;
+      --code-text: #cbd5e1;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    section p, section li { color: #d7dbe6; }
+    th { background: #1d2130; color: #e6e9f0; }
+    .stat { background: #1c2030; }
+    .schema-box { background: #171a2b; border-color: #333952; }
+    .callout { background: #1b1d33; }
+    .callout.warn { background: #2a2113; }
+    .callout.danger { background: #2a1717; }
+    code, .code-inline { background: #232838; color: #e6e9f0; }
+    nav.toc a:hover { background: #232840; }
+    .pill { background: #232840; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1>AML Signal Escalation — EDA hisoboti</h1>
+    <p>WUIT Hackathon, Fintech Track. O'zbekiston moliya sektoridagi monitoring bo'limi uchun avtomatik generatsiya qilingan AML signallarini escalate/dismiss bo'yicha bashorat qilish loyihasining boshlang'ich ma'lumotlar tahlili (EDA).</p>
+    <div class="badges">
+      <span class="badge">Metrika: ROC-AUC</span>
+      <span class="badge">Train: 14 000 signal</span>
+      <span class="badge">Test: 6 000 signal</span>
+      <span class="badge">Escalate ulushi: 17.2%</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc">
+  <ul>
+    <li><a href="#approach">1. Yondashuv</a></li>
+    <li><a href="#overview">2. Dataset ko'rinishi</a></li>
+    <li><a href="#visuals">3. EDA vizuallari</a></li>
+    <li><a href="#observations">4. Kuzatuvlar</a></li>
+    <li><a href="#target">5. Target va patternlar</a></li>
+    <li><a href="#ideas">6. Feature/model g'oyalari</a></li>
+    <li><a href="#conclusion">7. Xulosa</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <!-- 1. YONDASHUV -->
+  <section id="approach">
+    <div class="kicker">Bo'lim 1</div>
+    <h2>Jamoaning yondashuvi — qisqacha tavsif</h2>
+    <p>
+      Bank monitoring tizimi mijozlarning tranzaksiya tarixidan avtomatik <strong>AML signal (alert)</strong>lar generatsiya qiladi.
+      Har bir signalni mutaxassis qo'lda ko'rib chiqib, <strong>dismiss (0)</strong> yoki <strong>escalate (1)</strong> qaroriga keladi.
+      Muammo shundaki, signallarning katta qismi (~83%) oxir-oqibat yolg'on chiqadi (dismiss), lekin xodim baribir har birini
+      qo'lda tekshirishga majbur — bu vaqt va resursni behuda sarflaydi, real xavf esa navbatda "cho'kib" qolishi mumkin.
+    </p>
+    <p>
+      Bizning yondashuvimiz uch bosqichli:
+    </p>
+    <ol class="steps">
+      <li><strong>EDA (ushbu sayt):</strong> ikkita xom jadval (<code>signals</code> va <code>transactions</code>) ni chuqur o'rganish — hajm, sifat, taqsimotlar, target bilan bog'liqlik, va eng muhimi, <strong>data leakage</strong> xavfini aniqlash.</li>
+      <li><strong>Feature engineering:</strong> har bir signal uchun uning ortidagi (signal sanasidan oldingi) tranzaksiya tarixini o'nlab sonli xususiyatlarga (n_txn, amt_mean, frac_kirim, recency va h.k.) yig'ish.</li>
+      <li><strong>Modellashtirish:</strong> EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06) — demak qaror ko'p xususiyatlarning birgalikdagi, nochiziqli ta'siriga bog'liq. Shu sababli daraxt-asosli gradient boosting model (LightGBM / XGBoost / sklearn GradientBoosting) tanlandi, class imbalance uchun class-weight/scale_pos_weight bilan.</li>
+    </ol>
+    <div class="callout">
+      Ushbu sahifadagi barcha raqamlar va grafiklar <code>eda_site/generate_charts.py</code> skripti orqali haqiqiy <code>train_signals.csv</code>, <code>train_transactions.parquet</code>, <code>test_signals.csv</code>, <code>test_transactions.parquet</code> fayllaridan hisoblab olingan — hech qanday sun'iy/namunaviy raqam yo'q.
+    </div>
+  </section>
+
+  <!-- 2. DATASET OVERVIEW -->
+  <section id="overview">
+    <div class="kicker">Bo'lim 2</div>
+    <h2>Dataset umumiy ko'rinishi va tuzilishi</h2>
+    <p>Ma'lumotlar ikkita bog'langan jadvaldan iborat: bitta signal — ko'plab tranzaksiya (1-ko'p munosabat).</p>
+
+    <div class="schema-diagram">
+      <div class="schema-box">
+        <h4>signals (train / test)</h4>
+        <ul>
+          <li><code>signal_id</code> — identifikator (kalit)</li>
+          <li><code>signal_sanasi</code> — signal yaratilgan sana</li>
+          <li><code>eskalatsiya</code> — target 0/1 (faqat train'da)</li>
+        </ul>
+      </div>
+      <div class="schema-link">signal_id<br>orqali<br>bog'lanadi →</div>
+      <div class="schema-box">
+        <h4>transactions (train / test)</h4>
+        <ul>
+          <li><code>signal_id</code> — tashqi kalit</li>
+          <li><code>tranzaksiya_vaqti</code> — timestamp</li>
+          <li><code>kirim_chiqim</code> — kirim / chiqim</li>
+          <li><code>tranzaksiya_turi</code> — karta / bank_otkazmasi / naqd / xalqaro</li>
+          <li><code>miqdor_indeksi</code> — standartlashtirilgan (z-score) summa</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="num">14 000</div><div class="lbl">train signal (qator)</div></div>
+      <div class="stat"><div class="num">6 000</div><div class="lbl">test signal (qator)</div></div>
+      <div class="stat"><div class="num">6 987 663</div><div class="lbl">train tranzaksiya (qator)</div></div>
+      <div class="stat"><div class="num">3 027 575</div><div class="lbl">test tranzaksiya (qator)</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">missing qiymat (hamma joyda)</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">signal_id overlap (train/test)</div></div>
+    </div>
+
+    <h3>Sana oralig'i</h3>
+    <table>
+      <thead><tr><th>Jadval</th><th>Boshlanish</th><th>Tugash</th></tr></thead>
+      <tbody>
+        <tr><td>train_signals.signal_sanasi</td><td>2025-01-01</td><td>2026-12-31</td></tr>
+        <tr><td>test_signals.signal_sanasi</td><td>2025-01-01</td><td>2026-12-31</td></tr>
+        <tr><td>train_transactions.tranzaksiya_vaqti</td><td>2024-07-05</td><td>2026-12-31</td></tr>
+        <tr><td>test_transactions.tranzaksiya_vaqti</td><td>2024-07-05</td><td>2026-12-31</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Sifat tekshiruvlari (EDA orqali tasdiqlangan)</h3>
+    <ul>
+      <li>Har ikkala train va test signal_id to'plamida <strong>0 ta kesishish</strong> — leakage xavfi shu jihatdan yo'q.</li>
+      <li>Har bir signal_id kamida bitta tranzaksiyaga ega — bo'sh tarixli signal yo'q (train ham, test ham).</li>
+      <li>Hech qaysi ustunda yo'qolgan (missing/NaN) qiymat topilmadi.</li>
+      <li>Signal boshiga tranzaksiyalar soni: min = 1, <strong>median = 461</strong>, max = 2 279 (o'rtacha ~500 ga yaqin, lekin taqsimot o'ng tomonga cho'zilgan — ba'zi signallarning orqasida ancha uzun tarix bor).</li>
+    </ul>
+
+    <div class="callout warn">
+      <strong>Muhim:</strong> tranzaksiyalar sana oralig'i (2024-07-05 — 2026-12-31) signallar sana oralig'idan (2025-01-01 — 2026-12-31) kengroq va ular bilan qoplanadi — demak <strong>ba'zi tranzaksiyalar signal sanasidan keyin</strong> sodir bo'lgan. Bu bo'lim 4 va 6da batafsil yoritilgan.
+    </div>
+  </section>
+
+  <!-- 3. VIZUALLAR -->
+  <section id="visuals">
+    <div class="kicker">Bo'lim 3</div>
+    <h2>Bir nechta mazmunli EDA vizuallari</h2>
+    <p class="muted">Barcha grafiklar <code>generate_charts.py</code> skripti orqali haqiqiy ma'lumotlardan generatsiya qilingan (<code>eda_site/assets/*.png</code>).</p>
+
+    <div class="chart-grid">
+      <figure>
+        <img src="assets/01_target_distribution.png" alt="Target taqsimoti: dismiss vs escalate">
+        <figcaption><strong>1. Target taqsimoti.</strong> 11 595 dismiss (82.8%) vs 2 405 escalate (17.2%) — sezilarli nomutanosiblik (class imbalance).</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/02_transactions_over_time.png" alt="Vaqt bo'yicha tranzaksiya hajmi">
+        <figcaption><strong>2. Tranzaksiya hajmi vaqt bo'yicha (haftalik).</strong> 2024 o'rtasidan boshlab o'sib, 2025 oxiri — 2026 boshida cho'qqiga chiqadi, so'ng 2026 oxiriga borib pasayadi (ma'lumot to'plash oynasi shu tarzda yopilgan).</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/03_kirim_chiqim.png" alt="Kirim vs chiqim taqsimoti">
+        <figcaption><strong>3. Yo'nalish taqsimoti.</strong> Tranzaksiyalarning 75.6% kirim (incoming), 24.4% chiqim (outgoing).</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/04_tranzaksiya_turi.png" alt="Tranzaksiya turi taqsimoti">
+        <figcaption><strong>4. Tranzaksiya turi bo'yicha taqsimot.</strong> karta 53.8%, bank_otkazmasi 39.5%, naqd 6.3%, xalqaro 0.5%.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/05_amt_mean_distribution.png" alt="amt_mean taqsimoti, escalate vs dismiss">
+        <figcaption><strong>5. Signal bo'yicha o'rtacha summa (amt_mean).</strong> Escalate va dismiss guruhlarining taqsimotlari deyarli bir xil joyda markazlashgan — vizual farq juda kichik.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/06_n_txn_distribution.png" alt="Signal boshiga tranzaksiyalar soni taqsimoti">
+        <figcaption><strong>6. Signal boshiga tranzaksiyalar soni.</strong> O'ng tomonga cho'zilgan taqsimot, median 461; escalate guruhda biroz og'irroq o'ng dum bor.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/07_recent_activity.png" alt="Signal oldidan so'nggi faollik">
+        <figcaption><strong>7. Signal sanasidan oldingi faollik.</strong> So'nggi 1/7/30 kunda escalate signallarning o'rtacha tranzaksiya soni dismiss'dan biroz yuqori (masalan, so'nggi 1 kun: 41.9 vs 40.3).</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/08_feature_correlations.png" alt="Agregat xususiyatlarning target bilan korrelyatsiyasi">
+        <figcaption><strong>8. Xususiyatlar korrelyatsiyasi.</strong> Barcha agregat xususiyatlarning target bilan Pearson korrelyatsiyasi ±0.06 oralig'ida — hech biri yakka holda kuchli emas.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 4. TRANZAKSIYA TARIXIDAN KUZATUVLAR -->
+  <section id="observations">
+    <div class="kicker">Bo'lim 4</div>
+    <h2>Tranzaksiya tarixidan asosiy kuzatuvlar</h2>
+    <ul>
+      <li><strong>Hajm katta va notekis:</strong> signal boshiga o'rtacha ~500 tranzaksiya to'g'ri keladi, lekin median (461) o'rtachadan past va max 2 279 ga yetadi — demak ba'zi mijozlarning tarixi boshqalarnikidan sezilarli uzunroq, bu esa agregatsiyada normalizatsiya (masalan nisbat/ulush xususiyatlari) zarurligini ko'rsatadi.</li>
+      <li><strong>Yo'nalish nomutanosib:</strong> tranzaksiyalarning ~3/4 qismi kirim (75.6%), atigi ~1/4 qismi chiqim (24.4%) — bu odatiy mijoz xatti-harakati, lekin <code>frac_kirim</code> kabi ulush xususiyatlari signal darajasida foydali bo'lishi mumkin.</li>
+      <li><strong>Tur bo'yicha karta va bank o'tkazmasi dominant:</strong> karta (53.8%) va bank_otkazmasi (39.5%) birgalikda ~93% ni tashkil qiladi; naqd (6.3%) va xalqaro (0.5%) kamdan-kam uchraydi, lekin ular ko'pincha "kutilmagan" xatti-harakat sifatida qaraladi — shuning uchun ularning ulushi (<code>frac_naqd</code>, <code>frac_xalqaro</code>) alohida feature sifatida saqlanadi.</li>
+      <li><strong>Vaqt bo'yicha faollik notekis taqsimlangan:</strong> haftalik tranzaksiya hajmi 2024 o'rtasidan asta o'sib, 2025 oxiri/2026 boshida cho'qqiga chiqadi va 2026 oxiriga borib pasayadi — bu dataset yig'ish oynasining tabiiy chegarasi, model uchun maxsus muammo tug'dirmaydi, lekin <code>span_days</code>/<code>velocity</code> kabi xususiyatlar buni hisobga oladi.</li>
+      <li>
+        <strong>Eng muhim kuzatuv — sana bo'yicha "kelajakni ko'rish" xavfi (leakage):</strong>
+        tranzaksiyalar sana oralig'i (2024-07-05 — 2026-12-31) signal sanalari oralig'idan (2025-01-01 — 2026-12-31) kengroq va ular bilan qoplanadi.
+        Bu shuni anglatadiki, <strong>ba'zi tranzaksiyalar signal yaratilgan sanadan keyin ham sodir bo'lgan</strong> — agar feature yasashda bularni filtrlamasdan qo'shib yuborilsa, model signal chiqarilgan paytda mavjud bo'lmagan kelajak ma'lumotidan "foydalanib" sun'iy yuqori aniqlikka erishadi, bu esa test/production'da ishlamaydi.
+      </li>
+    </ul>
+    <div class="callout danger">
+      <strong>Qoida (majburiy):</strong> har qanday signal darajasidagi feature faqat <code>tranzaksiya_vaqti &lt;= signal_sanasi</code> shartiga mos tranzaksiyalardan hisoblanishi kerak. Ushbu saytdagi barcha agregat statistikalar va 5/6/7/8-grafiklar ham aynan shu filtr bilan hisoblangan.
+    </div>
+  </section>
+
+  <!-- 5. TARGET VA PATTERNLAR -->
+  <section id="target">
+    <div class="kicker">Bo'lim 5</div>
+    <h2>Target taqsimoti va xulq-atvor patternlari tahlili</h2>
+
+    <h3>Target nomutanosibligi</h3>
+    <p>
+      Train setda 11 595 ta dismiss (0) va 2 405 ta escalate (1) bor — <strong>escalate ulushi ~17.2%</strong>.
+      Bu klassik imbalanced classification muammosi: agar model doim "0" desa ham ~82.8% aniqlik (accuracy) beradi, shuning uchun
+      baholash metrikasi sifatida threshold'ga bog'liq bo'lmagan <strong>ROC-AUC</strong> tanlangani to'g'ri, model esa
+      class-weight / scale_pos_weight kabi imbalance texnikalari bilan o'qitilishi kerak.
+    </p>
+
+    <h3>Escalate vs dismiss: agregat xususiyatlar bo'yicha farq</h3>
+    <table>
+      <thead><tr><th>Xususiyat</th><th>Dismiss (0) o'rtachasi</th><th>Escalate (1) o'rtachasi</th><th>Korrelyatsiya target bilan</th></tr></thead>
+      <tbody>
+        <tr><td><code>n_txn</code></td><td>494.0</td><td>523.6</td><td>+0.037</td></tr>
+        <tr><td><code>n_txn_1d</code></td><td>40.3</td><td>41.9</td><td>+0.016</td></tr>
+        <tr><td><code>n_txn_7d</code></td><td>46.6</td><td>48.3</td><td>+0.015</td></tr>
+        <tr><td><code>n_txn_30d</code></td><td>77.9</td><td>81.2</td><td>+0.018</td></tr>
+        <tr><td><code>frac_naqd</code></td><td>—</td><td>—</td><td>+0.027</td></tr>
+        <tr><td><code>frac_kirim</code></td><td>—</td><td>—</td><td>-0.024</td></tr>
+        <tr><td><code>amt_mean</code></td><td>—</td><td>—</td><td>-0.052</td></tr>
+        <tr><td><code>amt_std</code></td><td>—</td><td>—</td><td>-0.053</td></tr>
+        <tr><td><code>amt_max</code></td><td>—</td><td>—</td><td>-0.060 (eng kuchli, lekin baribir zaif)</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      Kuzatilgan pattern: <strong>escalate qilingan signallar o'rtacha ko'proq tranzaksiyaga ega</strong> (523.6 vs 494.0) va
+      <strong>signal sanasidan oldingi so'nggi kunlarda biroz faolroq</strong> (masalan so'nggi 1 kunda 41.9 vs 40.3 tranzaksiya).
+      Ammo bu farqlar <em>yo'nalish jihatidan mantiqiy</em> bo'lsa-da, <em>kattalik jihatidan juda kichik</em> — korrelyatsiyalar
+      barchasi ±0.06 dan past. Demak "ko'p tranzaksiya = escalate" degan oddiy qoida amalda ishlamaydi (juda ko'p yolg'on musbat/manfiy beradi),
+      lekin bu signal umuman yo'q degani ham emas — u boshqa xususiyatlar bilan birgalikda modelga foydali bo'lishi mumkin.
+    </p>
+
+    <h3>Summalar (miqdor_indeksi) va tur/yo'nalish ulushlari bo'yicha</h3>
+    <p>
+      Signal bo'yicha o'rtacha summa (<code>amt_mean</code>) taqsimoti escalate va dismiss guruhlarida deyarli bir xil joyda
+      markazlashgan (5-grafik) — ya'ni "kattaroq summalar = ko'proq escalate" degan intuitiv taxmin ma'lumotda tasdiqlanmaydi.
+      Xuddi shunday, <code>frac_kirim</code>, <code>frac_karta</code>, <code>frac_xalqaro</code> kabi ulush xususiyatlari ham
+      ikkala guruhda deyarli bir xil — ular yakka holda kuchli ajratuvchi emas.
+    </p>
+  </section>
+
+  <!-- 6. FEATURE / MODEL G'OYALARI -->
+  <section id="ideas">
+    <div class="kicker">Bo'lim 6</div>
+    <h2>EDA'dan kelib chiqqan feature/model g'oyalari</h2>
+
+    <h3>Nima uchun oddiy chiziqli/threshold yondashuv ishlamaydi</h3>
+    <p>
+      8-grafikdagi korrelyatsiya tahlili shuni ko'rsatadiki, <strong>birorta ham yakka agregat xususiyat target bilan kuchli
+      chiziqli bog'liq emas</strong> (eng katta |korrelyatsiya| — <code>amt_max</code> uchun ≈ 0.06). Bu degani, "agar summa
+      X dan katta bo'lsa yoki tranzaksiya soni Y dan ko'p bo'lsa — escalate" kabi oddiy qoidalar amalda deyarli tasodifiy
+      natija beradi. Signal — ko'plab zaif, lekin individual ravishda yetarli emas bo'lgan xatti-harakat izlarining
+      <strong>birgalikdagi, nochiziqli kombinatsiyasidan</strong> kelib chiqadi.
+    </p>
+
+    <div class="pill-row">
+      <span class="pill">Gradient Boosting (LightGBM/XGBoost/GBM)</span>
+      <span class="pill">Class-weight / scale_pos_weight</span>
+      <span class="pill">Stratified K-Fold CV</span>
+      <span class="pill">ROC-AUC baholash</span>
+    </div>
+
+    <p>
+      Shu sababli modellashtirish uchun <strong>daraxt-asosli gradient boosting</strong> ensemble tanlandi — bunday modellar
+      ko'p sonli zaif xususiyatlar orasidagi murakkab, nochiziqli va interaction (o'zaro ta'sir) effektlarini avtomatik
+      o'rganadi, chiziqli regressiya/logistik regressiyaga qaraganda bu tur ma'lumotda ancha yaxshi ishlaydi.
+    </p>
+
+    <h3>EDA asosida taklif qilingan feature guruhlari</h3>
+    <table>
+      <thead><tr><th>Guruh</th><th>Misol xususiyatlar</th><th>EDA asoslanishi</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Hajm</td>
+          <td><code>n_txn</code>, <code>amt_sum</code></td>
+          <td>Escalate signallarda o'rtacha ko'proq tranzaksiya (523.6 vs 494.0), korrelyatsiya eng kuchli musbat (+0.037)</td>
+        </tr>
+        <tr>
+          <td>Recency (yaqin faollik)</td>
+          <td><code>n_txn_1d</code>, <code>n_txn_7d</code>, <code>n_txn_30d</code>, <code>velocity</code></td>
+          <td>Signal oldidan so'nggi kunlardagi faollik escalate guruhda konsistent ravishda yuqoriroq (7-grafik)</td>
+        </tr>
+        <tr>
+          <td>Taqsimot shakli</td>
+          <td><code>amt_mean</code>, <code>amt_std</code>, <code>amt_max</code>, <code>frac_extreme</code></td>
+          <td>Eng kuchli (garchi hali ham zaif) korrelyatsiyalar shu guruhda (amt_max ≈ -0.06)</td>
+        </tr>
+        <tr>
+          <td>Tur/yo'nalish ulushlari</td>
+          <td><code>frac_kirim</code>, <code>frac_karta</code>, <code>frac_naqd</code>, <code>frac_xalqaro</code></td>
+          <td>Yakka holda zaif, lekin boshqa xususiyatlar bilan interaction orqali foydali bo'lishi mumkin</td>
+        </tr>
+        <tr>
+          <td>Vaqt naqshlari</td>
+          <td><code>frac_night</code>, <code>frac_weekend</code>, <code>span_days</code></td>
+          <td>AML domenida g'ayrioddiy vaqt (tun/dam olish kuni) faolligi odatiy risk-signal hisoblanadi</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Leakage'ga qarshi qoida — modelga ta'siri</h3>
+    <p>
+      Bo'lim 4da tasvirlangan sana kesishishi (transaction sanalari signal sanasidan keyin ham davom etishi) tufayli,
+      <strong>feature engineering bosqichida <code>tranzaksiya_vaqti &lt;= signal_sanasi</code> filtri majburiy</strong>.
+      Aks holda model treningda "kelajak" ma'lumotidan foydalanib sun'iy yuqori CV-AUC ko'rsatishi mumkin, lekin bu
+      production/test sharoitida (bunda kelajak tranzaksiyalari hali mavjud emas) takrorlanmaydi — bu klassik
+      <em>train-serving skew / temporal leakage</em> xatosi.
+    </p>
+  </section>
+
+  <!-- 7. XULOSA -->
+  <section id="conclusion">
+    <div class="kicker">Bo'lim 7</div>
+    <h2>Qisqa xulosa</h2>
+    <ul>
+      <li>Dataset toza: missing qiymat yo'q, train/test o'rtasida signal_id kesishishi yo'q, har bir signalning tranzaksiya tarixi mavjud.</li>
+      <li>Target sezilarli nomutanosib: ~17.2% escalate — ROC-AUC va class-imbalance texnikalari zarur.</li>
+      <li>Signal sanasidan keyin ham tranzaksiyalar mavjudligi sababli, feature engineeringda <strong>leakage'ga qarshi sana filtri majburiy</strong>.</li>
+      <li>Hech qanday yakka agregat xususiyat target bilan kuchli bog'liq emas (|korrelyatsiya| ≤ 0.06) — signal ko'p, lekin zaif xususiyatlarning yig'indisidan iborat.</li>
+      <li>Eng ishonchli (garchi hali ham nisbatan zaif) yo'nalish — <strong>hajm va recency</strong>: escalate signallarda ko'proq va so'nggi kunlarda faolroq tranzaksiya tarixi kuzatiladi.</li>
+      <li>Xulosa: <strong>ko'p xususiyatli agregatsiya + gradient boosting</strong> ensemble model — bu EDA natijalariga eng mos yondashuv, oddiy threshold-qoidalar yoki chiziqli model yetarli emas.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  WUIT Hackathon — Fintech Track (AML Signal Escalation). EDA sayti <code>eda_site/generate_charts.py</code> orqali generatsiya qilingan haqiqiy statistikalar asosida tayyorlangan.
+  To'liq loyiha tavsifi: <a href="../README.md">README.md</a> · <a href="../ARCHITECTURE.md">ARCHITECTURE.md</a>
+</footer>
+
+</body>
+</html>
