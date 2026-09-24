@@ -16,7 +16,7 @@ Maqsad: ikki kishi GitHub orqali **bir-birini kutmasdan, parallel** ishlashi. Bu
 
 ---
 
-## TRACK A — Data, Feature Engineering & EDA (≈50%)
+## TRACK A — Data, Feature Engineering & EDA (≈50%) — ✅ BAJARILDI
 
 **Egallaydigan fayllar:** `src/data_loading.py`, `src/features.py`, `src/eda.py`, `eda_site/**`, `data/processed/*` (generatsiya qiladi)
 
@@ -39,17 +39,16 @@ Maqsad: ikki kishi GitHub orqali **bir-birini kutmasdan, parallel** ishlashi. Bu
 
 ---
 
-## TRACK B — Modeling, Evaluation & Submission (≈50%)
+## TRACK B — Modeling, Evaluation & Submission (≈50%) — ✅ BAJARILDI
 
 **Egallaydigan fayllar:** `src/model.py`, `src/train.py`, `src/predict.py`, `notebooks/submission_pipeline.ipynb`, `outputs/*`
 
 1. **Boshlash uchun mock feature'lar** — `src/config.py`dagi `make_dummy_features(signals_df)` funksiyasi tasodifiy/oddiy agregatsiya bilan shartnomadagi ustunlarni generatsiya qiladi. Shu bilan Track A tugashini kutmasdan model pipeline'ni qurishingiz, test qilishingiz mumkin.
 
-2. **Model (`src/model.py`)**
-   - `train(features_df, target) -> Model` — LightGBM/XGBoost/sklearn GradientBoosting
+2. **Model (`src/model.py`)** — yakuniy natija: gradient boosting emas, **Logistic Regression** tanlandi (real CV'da 0.563 vs HGB'ning 0.539 AUC'i — batafsili README.md § 5.1). Xulosa: bu maydonda "murakkabroq model" degani "yaxshiroq" degani emas, doim bir nechta model turini real CV bilan solishtirib ko'ring.
+   - `train(features_df, target) -> Model`
    - `cross_validate(features_df, target) -> float` — Stratified K-Fold (imbalance uchun), ROC-AUC
-   - Class imbalance uchun `class_weight` yoki `scale_pos_weight` bilan tajriba
-   - Hyperparameter tanlash (oddiy grid/optuna, ixtiyoriy)
+   - Class imbalance uchun `class_weight="balanced"` ishlatildi
 
 3. **Train skripti (`src/train.py`)**
    - `data/processed/train_features.parquet`ni o'qiydi (yoki mock, agar hali tayyor bo'lmasa), modelni o'qitadi, CV natijasini bosib chiqaradi, modelni saqlaydi

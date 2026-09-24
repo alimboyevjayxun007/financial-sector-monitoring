@@ -11,7 +11,7 @@ Vazifalarning 2 kishiga bo'linishi uchun: [TASKS.md](TASKS.md)
 
 **Sabab:** signallarning katta qismi yolg'on musbat (train setda 11 595 ta dismiss / 2 405 ta escalate — ya'ni ~17.2% escalate). Xodimlar hammasini birma-bir qo'lda tekshiradi, bu resurs isrofi va real xavfning navbatda qolishiga olib keladi.
 
-**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) sonli xususiyatlarga aylantirib (feature engineering), gradient boosting turidagi ML model bilan escalate ehtimolligini bashorat qilish. EDA shuni ko'rsatdiki, birorta ham yakka xususiyat target bilan kuchli chiziqli bog'liq emas (eng katta |korrelyatsiya| ≈ 0.06) — demak qaror ko'p xususiyatlarning birgalikdagi, nochiziqli ta'siriga bog'liq, shu sababli daraxt-asosli ensemble model (LightGBM / XGBoost / GradientBoosting) tanlandi.
+**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) sonli xususiyatlarga aylantirib (feature engineering), ML model bilan escalate ehtimolligini bashorat qilish. Boshida EDA'dagi "yakka xususiyat kuchsiz" topilmasidan kelib chiqib daraxt-asosli gradient boosting model taxmin qilingan edi, lekin **haqiqiy cross-validation tajribasi buni tasdiqlamadi** — bo'lim 5.1'da tushuntirilganidek, oddiy regullashtirilgan **Logistic Regression** amalda barqaror ravishda yaxshiroq umumlashtirdi (CV ROC-AUC 0.563) va yakuniy model sifatida shu tanlandi.
 
 ---
 
@@ -61,14 +61,17 @@ WUIT Hackathon/
 │   ├── config.py                      # yo'llar, sobitlar, feature ro'yxati (umumiy shartnoma)
 │   ├── data_loading.py                # DataLoader  (A-track)
 │   ├── features.py                    # FeatureBuilder  (A-track)
-│   ├── eda.py                         # EDA yordamchi funksiyalar / grafiklar  (A-track)
-│   ├── model.py                       # ModelTrainer  (B-track)
-│   ├── train.py                       # o'qitish skripti  (B-track)
+│   ├── model.py                       # ModelTrainer — Logistic Regression  (B-track)
+│   ├── train.py                       # o'qitish + cross-validation skripti  (B-track)
 │   └── predict.py                     # Predictor + SubmissionWriter  (B-track)
-├── eda_site/                          # majburiy EDA veb-sayti manba kodi  (A-track)
+├── eda_site/                          # majburiy EDA veb-sayti  (A-track)
+│   ├── index.html                     # statik, self-contained sayt (7 bo'lim)
+│   ├── generate_charts.py             # grafiklarni real ma'lumotdan generatsiya qiladi
+│   └── assets/*.png                   # 8 ta EDA grafigi
 ├── outputs/
+│   ├── model.pkl                      # o'qitilgan model (git'ga qo'shilmaydi)
 │   └── team_<TEAM_ID>.csv             # yakuniy topshiriq fayli
-├── tests/                             # yengil sanity testlar
+├── tests/                             # 21 ta test: data loading, features, model, submission format
 ├── ARCHITECTURE.md
 ├── README.md
 ├── TASKS.md
@@ -119,9 +122,24 @@ Chiqish fayli talablari (majburiy):
 - **Yakka xususiyat kuchsiz**: eng kuchli korrelyatsiya `amt_max` ≈ -0.06 — signal darajasida oddiy threshold-qoida (masalan "agar summa katta bo'lsa escalate") ishlamaydi.
 - **Hajm signal beradi, lekin kuchsiz**: escalate signallarda o'rtacha tranzaksiya soni (523.8) dismiss signallardan (494.0) biroz ko'p, xuddi shunday so'nggi 1/7 kundagi faollik ham biroz yuqoriroq — bu **recency (yaqin vaqtdagi faollik)** xususiyatlarining foydali bo'lishi mumkinligini ko'rsatadi.
 - **Yo'nalish va tur aralashmasi deyarli farq qilmaydi**: `frac_kirim`, `frac_karta`, `frac_xalqaro` kabi ulushlar ikkala guruhda deyarli bir xil — bular yakka holda kuchli ajratuvchi emas, lekin boshqa xususiyatlar bilan birga (interaction) foydali bo'lishi mumkin.
-- **Xulosa**: signal kuchli, ammo individual ravishda zaif ko'plab xatti-harakat izlaridan yig'iladi → **ko'p xususiyatli agregatsiya + gradient boosting** eng oqilona yondashuv, oddiy qoidalar yoki chiziqli model yetarli emas.
+- **Xulosa**: signal juda zaif va shovqinli, ko'plab xatti-harakat izlaridan yig'iladi → **ko'p xususiyatli agregatsiya** zarur, lekin quyida ko'rsatilganidek, model tanlashda "murakkabroq = yaxshiroq" degani emas.
 
 To'liq grafiklar va tahlil `eda_site/` saytida taqdim etiladi.
+
+### 5.1. Model tanlash — real CV tajribasi (kutilmagan natija)
+
+Boshida EDA "individual feature'lar kuchsiz, demak nochiziqli/interaction ta'sir bor" degan taxminga asoslanib, gradient boosting (daraxt-asosli ensemble) model tanlangan edi. Lekin haqiqiy `StratifiedKFold(5)` + ROC-AUC bilan solishtirilganda natija teskari chiqdi:
+
+| Model | CV ROC-AUC |
+|---|---|
+| `HistGradientBoostingClassifier` (depth=6) | 0.539 |
+| `HistGradientBoostingClassifier` (depth=3, kuchliroq regulyarizatsiya) | 0.548 |
+| `RandomForestClassifier` | 0.544 |
+| **`LogisticRegression` (standartlashtirilgan, class_weight="balanced")** | **0.563** |
+| Logistic Regression + darajа-2 interaction xususiyatlar | 0.547 (yomonlashdi) |
+| Kengaytirilgan feature to'plami (entropy, recency-acceleration, net-flow, va h.k.) + LR | 0.562 (deyarli o'zgarmadi) |
+
+**Xulosa:** signal shu qadar zaif va shovqinli (~14 000 qator, barcha xususiyatlar |korrelyatsiya| ≤ 0.06) ki, daraxt-asosli modellar haqiqiy signaldan ko'ra shovqinga moslashib (overfit) qoladi; oddiy, regullashtirilgan chiziqli model esa yaxshiroq umumlashtiradi. Qo'shimcha feature'lar yoki interaction'lar ham CV'ni sezilarli yaxshilamadi — bu ma'lumotning haqiqiy "shift" (headroom) chegarasiga yaqinlashilganini ko'rsatadi. Shu sababli yakuniy model: **`StandardScaler` + `LogisticRegression`** (`src/model.py`), CV ROC-AUC ≈ **0.563**.
 
 ---
 

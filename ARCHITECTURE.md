@@ -41,7 +41,7 @@ Bu — **relyatsion (1-ko'p) ma'lumot**: model ishlatishdan oldin ko'p qatorli t
 ## 3. Yechim g'oyasi (yuqori darajada)
 
 1. **Feature Engineering (xususiyatlar yasash):** har bir `signal_id` uchun tranzaksiya tarixidan o'nlab sonli xususiyatlar hisoblanadi — masalan: nechta tranzaksiya bo'lgan, o'rtacha summasi qancha, kirim/chiqim nisbati, xalqaro/naqd tranzaksiyalar ulushi, signal sanasidan oldingi 1/7/30 kunlik faollik, va h.k.
-2. **Model:** gradient boosting (masalan LightGBM/XGBoost/sklearn GradientBoosting) — bu turdagi "ko'p, lekin har biri zaif signal beruvchi xususiyat" muammosi uchun eng mos yechim, chunki EDA shuni ko'rsatdi: **hech qanday yakka xususiyat kuchli chiziqli bog'liqlik bermaydi** (eng katta korrelyatsiya ~0.06), demak qaror ko'plab xususiyatlarning birgalikdagi (nonlinear) kombinatsiyasiga bog'liq — buni chiziqli model emas, daraxt-asosli ensemble model yaxshi ushlaydi.
+2. **Model:** boshida EDA'dagi zaif korrelyatsiyalarga (~0.06) asoslanib gradient boosting (daraxt-asosli ensemble) taxmin qilingan edi, lekin real `StratifiedKFold` cross-validation buning teskarisini ko'rsatdi — signal shu qadar kuchsiz/shovqinli ekan, daraxt modellar shovqinga moslashib (overfit) ketadi. Yakuniy tanlov: oddiy, regullashtirilgan **Logistic Regression** (`StandardScaler` + `class_weight="balanced"`), CV ROC-AUC ≈ 0.563 — batafsili [README.md § 5.1](README.md#51-model-tanlash--real-cv-tajribasi-kutilmagan-natija) da.
 3. **Chiqish:** har bir test signali uchun 0..1 oralig'idagi ehtimollik — `team_<TEAM_ID>.csv`.
 4. **EDA sayti:** topilmalarni tushunarli grafik va matn bilan ko'rsatuvchi mustaqil veb-sahifa (majburiy topshiriq).
 
