@@ -45,21 +45,49 @@ def predict(model: Any, features_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({config.ID_COL: features_df[config.ID_COL], "ehtimollik": proba})
 
 
-def validate_submission(df: pd.DataFrame, expected_ids: Union[pd.Series, list]) -> None:
-    """Validate that submission strictly conforms to competition format rules.
+def validate_submission(
+    df: pd.DataFrame,
+    expected_ids: Union[pd.Series, Sequence[str], set],
+    min_std: float = 0.01,
+) -> None:
+    """Validate that submission strictly conforms to competition format and distribution rules.
+
+    Checks:
+        1. Exact column names and ordering: [signal_id, ehtimollik]
+        2. No duplicate signal_id values
+        3. Zero set difference between predictions and expected IDs (no missing, no unexpected)
+        4. No NaN/null probability values
+        5. Probabilities bounded in [0, 1]
+        6. Distribution spread: probabilities must not collapse to a single constant (min != max)
+        7. Distribution variance: standard deviation must meet minimum diversity threshold (std >= min_std)
 
     Args:
         df: Predictions DataFrame to validate.
-        expected_ids: Series or list of expected signal_id values.
+        expected_ids: Series or collection of expected signal_id values.
+        min_std: Minimum allowed standard deviation (default 0.01) to protect against collapsed predictions.
 
     Raises:
-        AssertionError: If columns, types, uniqueness, or range requirements are violated.
+        AssertionError: If any competition format or distribution invariant is violated.
     """
     assert list(df.columns) == [config.ID_COL, "ehtimollik"], "wrong columns/order"
     assert not df[config.ID_COL].duplicated().any(), "duplicate signal_id"
-    assert set(df[config.ID_COL]) == set(expected_ids), "missing/unknown signal_id"
+
+    # Symmetric set difference check
+    pred_ids = set(df[config.ID_COL])
+    exp_ids = set(expected_ids)
+    diff = pred_ids ^ exp_ids
+    assert not diff, f"signal_id set difference is not empty (diff count={len(diff)})"
+
     assert df["ehtimollik"].notna().all(), "missing predictions"
     assert df["ehtimollik"].between(0, 1).all(), "ehtimollik out of [0, 1]"
+
+    # Distribution checks (guards against collapsed or constant prediction outputs)
+    if len(df) > 1:
+        prob_min = float(df["ehtimollik"].min())
+        prob_max = float(df["ehtimollik"].max())
+        assert prob_min != prob_max, "ehtimollik values are constant (min == max); predictions collapsed"
+        prob_std = float(df["ehtimollik"].std())
+        assert prob_std >= min_std, f"ehtimollik std ({prob_std:.5f}) < {min_std}; distribution variance too low"
 
 
 def write(predictions_df: pd.DataFrame, out_path: Union[str, Path]) -> Path:
