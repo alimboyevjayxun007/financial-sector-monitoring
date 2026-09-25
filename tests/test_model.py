@@ -38,3 +38,20 @@ def test_cross_validate_is_near_chance_on_pure_noise():
     auc = cross_validate(X, y, n_splits=3)
     # unrelated target -> should not be able to fake a strong AUC
     assert 0.3 < auc < 0.7
+
+
+def test_cross_validate_raises_on_empty_input():
+    import pytest
+    X, y = _synthetic_classification_data(n=10)
+    with pytest.raises(ValueError, match="must not be empty"):
+        cross_validate(pd.DataFrame(), y)
+    with pytest.raises(ValueError, match="must not be empty"):
+        cross_validate(X, pd.Series(dtype=int))
+
+
+def test_cross_validate_raises_on_mismatched_length():
+    import pytest
+    X, y = _synthetic_classification_data(n=20)
+    with pytest.raises(ValueError, match="Length mismatch"):
+        cross_validate(X.iloc[:10], y)
+

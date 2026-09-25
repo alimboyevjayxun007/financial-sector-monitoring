@@ -4,7 +4,7 @@ import pytest
 
 from src import config
 from src.model import train
-from src.predict import predict, validate_submission
+from src.predict import predict, validate_submission, write
 
 
 def _fake_features(ids):
@@ -79,3 +79,27 @@ def test_real_train_and_predict_end_to_end_if_features_available():
     preds = predict(model, test_features)
 
     validate_submission(preds, test_features[config.ID_COL])
+
+
+def test_write_produces_valid_submission_file(tmp_path):
+    out_file = tmp_path / "team_test.csv"
+    preds = pd.DataFrame({
+        config.ID_COL: [f"SG_{i:04d}" for i in range(25)],
+        "ehtimollik": np.linspace(0.05, 0.95, 25),
+    })
+    write(preds, str(out_file))
+
+    assert out_file.exists()
+    loaded = pd.read_csv(out_file)
+    assert list(loaded.columns) == [config.ID_COL, "ehtimollik"]
+    assert len(loaded) == 25
+    assert not loaded[config.ID_COL].duplicated().any()
+    assert (loaded["ehtimollik"] >= 0).all() and (loaded["ehtimollik"] <= 1).all()
+
+
+def test_regression_no_make_dummy_features_in_config():
+    """Verify make_dummy_features is NOT present in src.config (safety lock)."""
+    assert not hasattr(config, "make_dummy_features"), (
+        "make_dummy_features must NOT exist in src.config (vulnerability guard)"
+    )
+

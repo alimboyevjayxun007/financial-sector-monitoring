@@ -61,6 +61,13 @@ def train(features_df: pd.DataFrame, target: pd.Series) -> CalibratedClassifierC
 def cross_validate(features_df: pd.DataFrame, target: pd.Series, n_splits: int = 5) -> float:
     """StratifiedKFold CV (keeps the ~17% positive rate in every fold),
     returns the mean out-of-fold ROC-AUC."""
+    if features_df is None or len(features_df) == 0:
+        raise ValueError("features_df must not be empty")
+    if target is None or len(target) == 0:
+        raise ValueError("target must not be empty")
+    if len(features_df) != len(target):
+        raise ValueError(f"Length mismatch: features_df has {len(features_df)} rows but target has {len(target)} rows")
+
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=config.RANDOM_SEED)
     X = features_df.reset_index(drop=True)
     y = target.reset_index(drop=True)
