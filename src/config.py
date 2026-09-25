@@ -17,6 +17,7 @@ TEST_TRANSACTIONS_PATH = RAW_DATA_DIR / "test_transactions.parquet"
 
 TRAIN_FEATURES_PATH = PROCESSED_DIR / "train_features.parquet"
 TEST_FEATURES_PATH = PROCESSED_DIR / "test_features.parquet"
+MODEL_PATH = OUTPUTS_DIR / "model.pkl"
 
 ID_COL = "signal_id"
 TARGET_COL = "eskalatsiya"

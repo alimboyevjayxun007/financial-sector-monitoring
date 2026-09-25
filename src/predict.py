@@ -1,14 +1,37 @@
 """Track B: Predictor + SubmissionWriter."""
 import argparse
+import logging
+from pathlib import Path
+from typing import Any, Union
 
+import joblib
 import numpy as np
 import pandas as pd
 
 from src import config
 from src.data_loading import load_signals
 
+# Setup module logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("src.predict")
 
-def predict(model, features_df: pd.DataFrame) -> pd.DataFrame:
+
+def predict(model: Any, features_df: pd.DataFrame) -> pd.DataFrame:
+    """Generate calibrated escalation probabilities for given feature set.
+
+    Args:
+        model: Fitted classifier supporting predict_proba (e.g. CalibratedClassifierCV).
+        features_df: DataFrame containing required columns defined in config.FEATURE_COLUMNS.
+
+    Returns:
+        DataFrame containing signal_id and predicted probability column 'ehtimollik'.
+
+    Raises:
+        ValueError: If required columns are missing, or contain NaN/infinite values.
+    """
     missing = set(config.FEATURE_COLUMNS) - set(features_df.columns)
     if missing:
         raise ValueError(f"features_df is missing required columns: {sorted(missing)}")
@@ -22,7 +45,16 @@ def predict(model, features_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({config.ID_COL: features_df[config.ID_COL], "ehtimollik": proba})
 
 
-def validate_submission(df: pd.DataFrame, expected_ids: pd.Series) -> None:
+def validate_submission(df: pd.DataFrame, expected_ids: Union[pd.Series, list]) -> None:
+    """Validate that submission strictly conforms to competition format rules.
+
+    Args:
+        df: Predictions DataFrame to validate.
+        expected_ids: Series or list of expected signal_id values.
+
+    Raises:
+        AssertionError: If columns, types, uniqueness, or range requirements are violated.
+    """
     assert list(df.columns) == [config.ID_COL, "ehtimollik"], "wrong columns/order"
     assert not df[config.ID_COL].duplicated().any(), "duplicate signal_id"
     assert set(df[config.ID_COL]) == set(expected_ids), "missing/unknown signal_id"
@@ -30,27 +62,74 @@ def validate_submission(df: pd.DataFrame, expected_ids: pd.Series) -> None:
     assert df["ehtimollik"].between(0, 1).all(), "ehtimollik out of [0, 1]"
 
 
-def write(predictions_df: pd.DataFrame, out_path: str) -> None:
-    predictions_df.to_csv(out_path, index=False)
+def write(predictions_df: pd.DataFrame, out_path: Union[str, Path]) -> Path:
+    """Write validated submission predictions to a CSV file.
+
+    Args:
+        predictions_df: DataFrame containing signal_id and ehtimollik.
+        out_path: Destination path for the CSV output.
+
+    Returns:
+        Path object pointing to the written CSV file.
+    """
+    target = Path(out_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    predictions_df.to_csv(target, index=False)
+    logger.info("Submission successfully written to %s (%d rows)", target, len(predictions_df))
+    return target
+
+
+def run_predict(
+    out_path: Union[str, Path],
+    model_path: Path = config.MODEL_PATH,
+    test_signals_path: Path = config.TEST_SIGNALS_PATH,
+    test_features_path: Path = config.TEST_FEATURES_PATH,
+) -> Path:
+    """Load model and test features, generate predictions, validate format, and write output.
+
+    Args:
+        out_path: Destination path for the submission CSV file.
+        model_path: Path to serialized model artifact.
+        test_signals_path: Path to raw test signals CSV.
+        test_features_path: Path to processed test features parquet file.
+
+    Returns:
+        Path to the generated submission file.
+
+    Raises:
+        FileNotFoundError: If model or feature files do not exist.
+    """
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"{model_path} not found — run `python3 -m src.train` first."
+        )
+    if not test_features_path.exists():
+        raise FileNotFoundError(
+            f"{test_features_path} not found — run `python3 -m src.features` first."
+        )
+
+    logger.info("Loading model from %s", model_path)
+    model = joblib.load(model_path)
+
+    logger.info("Loading test signals from %s", test_signals_path)
+    test_signals = load_signals(test_signals_path)
+
+    logger.info("Loading test features from %s", test_features_path)
+    test_features = pd.read_parquet(test_features_path)
+
+    logger.info("Generating predictions for %d test signals...", len(test_features))
+    predictions = predict(model, test_features)
+
+    logger.info("Validating submission format...")
+    validate_submission(predictions, test_signals[config.ID_COL])
+
+    return write(predictions, out_path)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--out", required=True, help="e.g. outputs/team_<TEAM_ID>.csv")
+    parser = argparse.ArgumentParser(description="Generate submission predictions for Track B")
+    parser.add_argument("--out", required=True, help="Destination CSV path, e.g. outputs/team_<TEAM_ID>.csv")
     args = parser.parse_args()
 
-    import joblib
+    run_predict(out_path=args.out)
 
-    model = joblib.load(config.OUTPUTS_DIR / "model.pkl")
-
-    test_signals = load_signals(config.TEST_SIGNALS_PATH)
-    if not config.TEST_FEATURES_PATH.exists():
-        raise FileNotFoundError(
-            f"{config.TEST_FEATURES_PATH} not found — run `python3 -m src.features` first."
-        )
-    test_features = pd.read_parquet(config.TEST_FEATURES_PATH)
-
-    predictions = predict(model, test_features)
-    validate_submission(predictions, test_signals[config.ID_COL])
-    write(predictions, args.out)
-    print(f"wrote {args.out}")

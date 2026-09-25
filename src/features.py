@@ -22,6 +22,20 @@ _RECENCY_WINDOWS = {"n_txn_1d": 1, "n_txn_7d": 7, "n_txn_30d": 30}
 
 
 def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate transaction history for each signal_id strictly prior to signal_sanasi.
+
+    Computes volume, directional shares, transaction types, extreme value ratios,
+    recency counts (1d/7d/30d), velocity, and temporal Shannon entropy features
+    conforming strictly to config.FEATURE_COLUMNS.
+
+    Args:
+        signals_df: DataFrame containing signal_id, signal_sanasi, and optionally eskalatsiya.
+        transactions_df: DataFrame containing transaction history.
+
+    Returns:
+        pd.DataFrame with exactly one row per input signal, containing signal_id,
+        the 25 feature columns in config.FEATURE_COLUMNS, and target if present.
+    """
     df = transactions_df.merge(
         signals_df[[config.ID_COL, "signal_sanasi"]], on=config.ID_COL, how="inner"
     )
@@ -111,6 +125,10 @@ def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFra
 
 
 if __name__ == "__main__":
+    import logging
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logger = logging.getLogger("src.features")
+
     config.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     train_signals = load_signals(config.TRAIN_SIGNALS_PATH)
@@ -123,5 +141,5 @@ if __name__ == "__main__":
     test_features = build(test_signals, test_transactions)
     test_features.to_parquet(config.TEST_FEATURES_PATH, index=False)
 
-    print(f"wrote {config.TRAIN_FEATURES_PATH} ({train_features.shape})")
-    print(f"wrote {config.TEST_FEATURES_PATH} ({test_features.shape})")
+    logger.info("Wrote %s (%s)", config.TRAIN_FEATURES_PATH, train_features.shape)
+    logger.info("Wrote %s (%s)", config.TEST_FEATURES_PATH, test_features.shape)

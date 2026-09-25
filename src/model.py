@@ -53,6 +53,15 @@ def _make_classifier() -> CalibratedClassifierCV:
 
 
 def train(features_df: pd.DataFrame, target: pd.Series) -> CalibratedClassifierCV:
+    """Train the calibrated logistic regression pipeline on the given feature matrix and target.
+
+    Args:
+        features_df: Matrix of features conforming to config.FEATURE_COLUMNS.
+        target: Binary escalation labels (0 = dismiss, 1 = escalate).
+
+    Returns:
+        Fitted CalibratedClassifierCV estimator instance.
+    """
     model = _make_classifier()
     model.fit(features_df, target)
     return model
