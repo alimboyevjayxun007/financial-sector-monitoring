@@ -12,7 +12,7 @@ Loyiha bosh rejasi va yo'l xaritasi uchun: [PLAN.md](PLAN.md)
 
 **Sabab:** signallarning katta qismi yolg'on musbat (train setda 11 595 ta dismiss / 2 405 ta escalate — ya'ni ~17.2% escalate). Xodimlar hammasini birma-bir qo'lda tekshiradi, bu resurs isrofi va real xavfning navbatda qolishiga olib keladi.
 
-**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) 22 ta sonli xususiyatga aylantirib (feature engineering), ML model bilan escalate ehtimolligini bashorat qilish. Boshida EDA'dagi "yakka xususiyat kuchsiz" topilmasidan kelib chiqib daraxt-asosli gradient boosting model taxmin qilingan edi, lekin **haqiqiy cross-validation tajribasi buni tasdiqlamadi** — bo'lim 5.1/5.1.1'da tushuntirilganidek, oddiy regullashtirilgan, kalibrlangan **Logistic Regression** amalda barqaror ravishda yaxshiroq umumlashtirdi va yakuniy model sifatida shu tanlandi, **CV ROC-AUC ≈ 0.565** (5-fold; barcha raqamlar `scripts/model_selection_experiments.py` bilan qayta ishlab chiqariladi).
+**Yechim:** har bir signal uchun uning ortidagi tranzaksiya tarixini (o'rtacha ~500 ta tranzaksiya/signal) 25 ta sonli xususiyatga aylantirib (feature engineering), ML model bilan escalate ehtimolligini bashorat qilish. Boshida EDA'dagi "yakka xususiyat kuchsiz" topilmasidan kelib chiqib daraxt-asosli gradient boosting model taxmin qilingan edi, lekin **haqiqiy cross-validation tajribasi buni tasdiqlamadi** — bo'lim 5.1/5.1.1'da tushuntirilganidek, oddiy regullashtirilgan, kalibrlangan **Logistic Regression** amalda barqaror ravishda yaxshiroq umumlashtirdi va yakuniy model sifatida shu tanlandi, **CV ROC-AUC = 0.5669 ± 0.0090** (5-fold Stratified CV; barcha raqamlar `scripts/generate_error_analysis.py` va `scripts/model_selection_experiments.py` bilan to'liq qayta ishlab chiqariladi).
 
 ---
 
@@ -75,7 +75,7 @@ WUIT Hackathon/
 ├── outputs/
 │   ├── model.pkl                      # o'qitilgan model (git'ga qo'shilmaydi)
 │   └── team_<TEAM_ID>.csv             # yakuniy topshiriq fayli
-├── tests/                             # 25 ta test: data loading, features, model, submission format
+├── tests/                             # 33 ta test: data loading, features, model, submission format
 ├── ARCHITECTURE.md
 ├── README.md
 ├── TASKS.md
@@ -112,7 +112,7 @@ python3 -m src.predict --out "outputs/team_<TEAM_ID>.csv"
 
 Yoki butun jarayonni birma-bir ko'rish uchun: `notebooks/submission_pipeline.ipynb` ni oching va tartib bilan ishga tushiring (bu — tekshiruv uchun talab qilinadigan **reproducible notebook**).
 
-Testlarni ishga tushirish (25 ta test — data loading, feature contract, leakage-himoya, model, submission format):
+Testlarni ishga tushirish (33 ta test — data loading, feature contract, leakage-himoya, model, submission format va taqsimot):
 
 ```bash
 python3 -m pytest tests/ -v
@@ -257,6 +257,27 @@ Ushbu tahlilni to'liq qayta hisoblash va grafikni generatsiya qilish:
 ```bash
 python scripts/model_interpretation.py
 ```
+
+### 5.4. Xatolik tahlili (Error Analysis) va model xatti-harakati
+
+Tizim xatoliklarini chuqur tahlil qilish uchun alohida [notebooks/error_analysis.ipynb](notebooks/error_analysis.ipynb) tadqiqoti amalga oshirildi (`python scripts/generate_error_analysis.py` orqali to'liq qayta takrorlanadi):
+
+1. **5-Fold CV Barqarorligi:**
+   - **Fold 1:** 0.5781 | **Fold 2:** 0.5521 | **Fold 3:** 0.5659 | **Fold 4:** 0.5744 | **Fold 5:** 0.5641
+   - **Yakuniy Out-of-Fold Metrika:** **`0.5669 ± 0.0090`** (barcha bo'laklarda past dispersiya va barqaror umumlashtirish).
+2. **Optimal Qaror Qabul Qilish Chegarasi ($F_1$-Optimal Threshold):**
+   - Bazaviy sinflar nomutanosibligi ($17.2\%$ ijobiy sinf) tufayli an'anaviy $0.50$ chegarasi mos kelmaydi.
+   - $F_1$-score'ni maksimallashtiruvchi optimal threshold: **`0.1560`** (Maksimal $F_1 = 0.3047$).
+   - Ushbu optimal threshold'dagi chalkashlik matritsasi (Confusion Matrix):
+     - **True Negatives (TN):** $3,306$
+     - **False Positives (FP):** $8,289$
+     - **False Negatives (FN):** $483$
+     - **True Positives (TP):** $1,922$ (Eskalatsiyalarni qamrab olish darajasi: **`Recall = 79.9%`**).
+3. **Model qaysi holatlarda qiynaladi (Failure Modes):**
+   - **Tashqi omillarga bog'liq signallar (False Negatives):** Ayrim signallarning tranzaksiya tarixi to'liq standart (oddiy maishiy xaridlar, past entropiya) bo'lsa-da, ular bank tomonidan tashqi ma'lumotlar (huquq-tartibot organlari talabnomalari, qora ro'yxatlar, mijozning shubhali profili) asosida eskalatsiya qilingan. Bu axborot tranzaksiya datasetida mavjud bo'lmagani sababli model ularni dismiss sifatida bashorat qiladi.
+   - **Ortiqcha ehtiyotkorlik (False Positives):** Model xavfli xatti-harakatlarni (naqd yechish, tungi faollik, keskin aylanma) ko'rganda ehtimollikni oshiradi, ammo AML mutaxassislari mijozning faoliyat sohasi (masalan, kassa xizmati yoki tungi logistika) asosida bu signallarni dismiss qilgan holatlar FP sonini oshiradi.
+4. **Ehtimollik Kalibratsiyasi (Reliability Diagram):**
+   - Platt sigmoid scaling yordamida kalibrlangan ehtimolliklar test to'plamidagi haqiqiy sinf chastotasiga ($17.2\%$) to'liq moslashtirildi (o'rtacha $0.1718$, oraliq $[0.0533, 0.3700]$), model overconfident sun'iy natijalardan xoli.
 
 ---
 
