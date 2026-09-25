@@ -1,5 +1,9 @@
 # WUIT Hackathon — Fintech Track: AML Signal Escalation Scoring
 
+![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)
+![Tests 34 passed](https://img.shields.io/badge/tests-34%20passed-success.svg)
+![ROC-AUC 0.5669](https://img.shields.io/badge/CV%20ROC--AUC-0.5669%20%C2%B1%200.0090-emerald.svg)
+
 O'zbekiston moliya sektoridagi monitoring bo'limi mijozlarning tranzaksiya tarixidan avtomatik generatsiya qilingan **signal (alert)**larni qabul qiladi. Har bir signalni mutaxassis ko'rib chiqadi va **dismiss (0)** yoki **escalate (1)** qiladi. Loyiha maqsadi — har bir yashirin test signali uchun escalate bo'lish **ehtimolligini (0..1)** bashorat qiluvchi model qurish. Baholash metrikasi: **ROC-AUC**.
 
 To'liq arxitektura va klass diagrammasi uchun: [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -75,7 +79,7 @@ WUIT Hackathon/
 ├── outputs/
 │   ├── model.pkl                      # o'qitilgan model (git'ga qo'shilmaydi)
 │   └── team_<TEAM_ID>.csv             # yakuniy topshiriq fayli
-├── tests/                             # 33 ta test: data loading, features, model, submission format
+├── tests/                             # 34 ta test: data loading, features, model, submission format, inspector
 ├── ARCHITECTURE.md
 ├── README.md
 ├── TASKS.md
@@ -110,9 +114,15 @@ Test uchun bashorat va submission faylini yaratish:
 python3 -m src.predict --out "outputs/team_<TEAM_ID>.csv"
 ```
 
+Alohida biror signal bo'yicha tushuntirish (xavf drayverlari va qaror tavsiyasi) olish:
+
+```bash
+python3 scripts/inspect_signal.py --signal-id SG_009727
+```
+
 Yoki butun jarayonni birma-bir ko'rish uchun: `notebooks/submission_pipeline.ipynb` ni oching va tartib bilan ishga tushiring (bu — tekshiruv uchun talab qilinadigan **reproducible notebook**).
 
-Testlarni ishga tushirish (33 ta test — data loading, feature contract, leakage-himoya, model, submission format va taqsimot):
+Testlarni ishga tushirish (34 ta test — data loading, feature contract, leakage-himoya, model, submission format, taqsimot va inspector):
 
 ```bash
 python3 -m pytest tests/ -v

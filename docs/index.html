@@ -754,7 +754,7 @@
   <div class="kpi-grid">
     <div class="kpi-card purple">
       <div class="kpi-label">5-Fold CV ROC-AUC</div>
-      <div class="kpi-value">0.5671</div>
+      <div class="kpi-value">0.5669</div>
       <div class="kpi-hint">↑ Barqaror regullashtirilgan model</div>
     </div>
     <div class="kpi-card cyan">
@@ -774,7 +774,7 @@
     </div>
     <div class="kpi-card purple">
       <div class="kpi-label">Unit Testlar</div>
-      <div class="kpi-value">25 / 25</div>
+      <div class="kpi-value">34 / 34</div>
       <div class="kpi-hint">100% muvaffaqiyatli o'tgan</div>
     </div>
   </div>
@@ -789,6 +789,7 @@
       <li><a href="#observations">4. Kuzatuvlar</a></li>
       <li><a href="#target">5. Target va Patternlar</a></li>
       <li><a href="#experiments">6. Model benchmarking</a></li>
+      <li><a href="#interpretation">6.2. Interpretatsiya &amp; Xatolar</a></li>
       <li><a href="#simulator">6.5. Risk Simulyatori</a></li>
       <li><a href="#conclusion">7. Xulosa</a></li>
     </ul>
@@ -1208,6 +1209,112 @@
       <li>Train to'plamidagi haqiqiy bazaviy stavka: <strong>17.18%</strong></li>
       <li>Modelning testdagi o'rtacha bashorat ehtimolligi: <strong>17.20%</strong> (mutlaq uyg'unlik!)</li>
     </ul>
+  </section>
+
+  <!-- 6.2. MODEL INTERPRETATSIYASI VA XATOLIK TAHLILI -->
+  <section id="interpretation" class="panel">
+    <span class="section-tag">// BO'LIM 6.2: INTERPRETATSIYA VA XATOLIK TAHLILI (AUDIT-PROOF EXPLAINABILITY)</span>
+    <h2>Model Interpretatsiyasi va Xatolik Tahlili</h2>
+    <p>
+      Moliyaviy monitoring va komplayens sohasida "qora quti" (black box) modellardan foydalanish audit talablariga zid keladi.
+      Bizning tanlagan <code>LogisticRegression(C=0.05, class_weight='balanced')</code> modelimiz barcha 25 ta xususiyat bo'yicha aniq standartlashtirilgan koeffitsiyentlarni taqdim etadi (barcha qiymatlar 1 standart og'ishga normallashtirilgan).
+    </p>
+
+    <div class="chart-card" style="margin: 24px 0;">
+      <h4>Standartlashtirilgan Koeffitsiyentlar Taqsimoti (25 Feature)</h4>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">
+        Qizil barlar — signalni eskalatsiyaga tortuvchi risk omillari (ijobiy ta'sir). Ko'k barlar — signalni dismiss'ga tortuvchi normal xulq-atvor ko'rsatkichlari (salbiy ta'sir).
+      </p>
+      <img src="assets/feature_importance.png" alt="Standartlashtirilgan Logistic Regression Koeffitsiyentlari" style="width: 100%; border-radius: 8px; border: 1px solid var(--card-border);" loading="lazy">
+    </div>
+
+    <div class="kpi-grid" style="margin: 24px 0;">
+      <div class="kpi-card purple">
+        <div class="kpi-label">Optimal F1 Threshold</div>
+        <div class="kpi-value">0.1560</div>
+        <div class="kpi-hint">Maksimal F1 = 0.3047</div>
+      </div>
+      <div class="kpi-card cyan">
+        <div class="kpi-label">Eskalatsiya Qamrovi (Recall)</div>
+        <div class="kpi-value">79.9%</div>
+        <div class="kpi-hint">1 922 / 2 405 haqiqiy xavf aniqlangan</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">False Negatives (O'tkazilgan)</div>
+        <div class="kpi-value">483 ta</div>
+        <div class="kpi-hint">Tashqi sababli eskalatsiyalar</div>
+      </div>
+      <div class="kpi-card cyan">
+        <div class="kpi-label">Platt Kalibratsiya</div>
+        <div class="kpi-value">17.20%</div>
+        <div class="kpi-hint">Haqiqiy stavkaga aynan mos</div>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Xususiyat (Feature)</th>
+            <th>Koeffitsiyent</th>
+            <th>Odds Ratio</th>
+            <th>AML Domain Tahlili</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color: var(--rose-accent);">dow_maxshare</strong></td>
+            <td>+0.2285</td>
+            <td>1.257</td>
+            <td>Haftaning bir kunida konsentratsiyalangan burst faollik</td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--rose-accent);">hour_entropy</strong></td>
+            <td>+0.1982</td>
+            <td>1.219</td>
+            <td>Soatlar bo'yicha yuqori entropiya (tartibsiz, nostandart vaqtlar)</td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--rose-accent);">n_txn</strong></td>
+            <td>+0.1620</td>
+            <td>1.176</td>
+            <td>Umumiy tranzaksiyalarning yuqori intensivligi</td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--rose-accent);">amt_mean_1d</strong></td>
+            <td>+0.0769</td>
+            <td>1.080</td>
+            <td>Oxirgi 24 soatdagi summalar o'sishi (oxirgi daqiqa anomaliyasi)</td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--rose-accent);">frac_naqd</strong></td>
+            <td>+0.0646</td>
+            <td>1.067</td>
+            <td>Naqdlashtirish operatsiyalari ulushi (klassik AML xavf belgisi)</td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--cyan-accent);">amt_mean</strong></td>
+            <td>-0.1992</td>
+            <td>0.819</td>
+            <td>Uzoq muddatli barqaror o'rtacha tranzaksiya (maosh/muntazam biznes)</td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--cyan-accent);">amt_max</strong></td>
+            <td>-0.1931</td>
+            <td>0.824</td>
+            <td>Tarixdagi yagona yirik avvalgi to'lov (allaqachon tekshirib o'tilgan)</td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--cyan-accent);">frac_kirim</strong></td>
+            <td>-0.0835</td>
+            <td>0.920</td>
+            <td>Kirim operatsiyalari ulushi (mablag' chiqishi emas, kelishi xavfsizroq)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- 6.5. INTERAKTIV RISK SIMULYATORI -->
   <section id="simulator" class="panel">
     <span class="section-tag">// BO'LIM 6.5: INTERAKTIV RISK SIMULYATORI (WHAT-IF ANALYSIS)</span>
