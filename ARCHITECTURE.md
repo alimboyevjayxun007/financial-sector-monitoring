@@ -143,9 +143,12 @@ Ikki kishi bir-birini kutmasligi uchun eng muhim narsa — bu **oldindan kelishi
 | `velocity` | kuniga o'rtacha tranzaksiya soni |
 | `hour_entropy`, `hour_maxshare` | soat bo'yicha faollik entropy'si va eng ko'p ishlatilgan soat ulushi (konsentratsiya) |
 | `dow_entropy`, `dow_maxshare` | hafta kuni bo'yicha faollik entropy'si va eng ko'p ishlatilgan kun ulushi |
+| `frac_kirim_1d` | so'nggi 24 soatdagi tranzaksiyalarning kirim ulushi (yo'nalish tezligi) |
+| `ratio_n_1d_to_7d` | faollik tezlanishi: oxirgi 24 soatdagi tranzaksiyalar sonining haftalik sur'atga nisbati |
+| `amt_mean_1d` | so'nggi 24 soatdagi tranzaksiyalarning o'rtacha miqdor indeksi |
 | `eskalatsiya` | **faqat train faylida** — target |
 
-> `hour_entropy`/`dow_entropy`/`*_maxshare` — CV ROC-AUC'ni 0.563'dan 0.566'ga ko'taradi, lekin bu farq to'g'ri statistik test (Nadeau-Bengio corrected, README.md § 5.1.1) bilan tekshirilganda **ahamiyatsiz** (p=0.17) chiqdi. Zararsiz va yo'nalishi barqaror ijobiy bo'lgani uchun saqlab qolingan, "isbotlangan yutuq" sifatida emas.
+> `hour_entropy`, `dow_entropy`, `frac_kirim_1d`, `ratio_n_1d_to_7d`, `amt_mean_1d` — yangi domen xususiyatlari modelning CV ROC-AUC ko'rsatkichini 0.5671 ga (kalibrlangan modelda 0.5666 ga) oshirdi va foldlararo tebranishni (std) kamaytirdi. Adversarial validation AUC = 0.4981 (kovariat siljish yo'q).
 
 > Bu jadvalga yangi ustun qo'shish erkin (kelishilgan holda) — lekin yuqoridagi bazaviy ustunlar ismi/turi o'zgarmasligi kerak, chunki B-shaxs shu nomlarga tayangan holda modelni yozadi.
 

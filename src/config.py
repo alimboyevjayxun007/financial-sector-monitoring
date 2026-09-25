@@ -2,7 +2,11 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RAW_DATA_DIR = ROOT / "fintech_track_data" / "fintech_data"
+RAW_DATA_DIR = (
+    (ROOT / "fintech_data")
+    if (ROOT / "fintech_data").exists()
+    else (ROOT / "fintech_track_data" / "fintech_data")
+)
 PROCESSED_DIR = ROOT / "data" / "processed"
 OUTPUTS_DIR = ROOT / "outputs"
 
@@ -43,4 +47,7 @@ FEATURE_COLUMNS = [
     "hour_maxshare",
     "dow_entropy",
     "dow_maxshare",
+    "frac_kirim_1d",
+    "ratio_n_1d_to_7d",
+    "amt_mean_1d",
 ]

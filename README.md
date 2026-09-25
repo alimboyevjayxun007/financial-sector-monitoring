@@ -4,6 +4,7 @@ O'zbekiston moliya sektoridagi monitoring bo'limi mijozlarning tranzaksiya tarix
 
 To'liq arxitektura va klass diagrammasi uchun: [ARCHITECTURE.md](ARCHITECTURE.md)
 Vazifalarning 2 kishiga bo'linishi uchun: [TASKS.md](TASKS.md)
+Loyiha bosh rejasi va yo'l xaritasi uchun: [PLAN.md](PLAN.md)
 
 ---
 

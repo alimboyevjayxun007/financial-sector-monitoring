@@ -63,6 +63,18 @@ def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFra
         )
         agg = agg.merge(recent, on=config.ID_COL, how="left")
 
+    # Recent 24-hour direction and amount characteristics:
+    df_1d = df[df["days_before"] <= 1.0]
+    agg_1d = (
+        df_1d.groupby(config.ID_COL)
+        .agg(
+            amt_mean_1d=("miqdor_indeksi", "mean"),
+            frac_kirim_1d=("is_kirim", "mean"),
+        )
+        .reset_index()
+    )
+    agg = agg.merge(agg_1d, on=config.ID_COL, how="left")
+
     # Concentration of activity across hour-of-day / day-of-week: how spread
     # out (high entropy) vs. concentrated in a narrow window (high max-share,
     # low entropy) each signal's transactions are. Validated via 5x5-repeat
@@ -85,6 +97,7 @@ def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFra
     full[numeric_cols] = full[numeric_cols].fillna(0.0)
 
     full["velocity"] = full["n_txn"] / (full["span_days"] + 1)
+    full["ratio_n_1d_to_7d"] = full["n_txn_1d"] / ((full["n_txn_7d"] / 7.0) + 0.1)
 
     if config.TARGET_COL in signals_df.columns:
         full = full.merge(
