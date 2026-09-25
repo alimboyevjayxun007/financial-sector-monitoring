@@ -598,6 +598,125 @@
     background: var(--rose-accent);
   }
 
+  /* SIMULATOR */
+  .sim-container {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 860px) {
+    .sim-container { grid-template-columns: 1fr; }
+  }
+  .sim-group {
+    margin-bottom: 22px;
+  }
+  .sim-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #f1f5f9;
+  }
+  .sim-val {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--cyan-accent);
+    font-weight: 700;
+    background: rgba(6, 182, 212, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  input[type=range].sim-slider {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 7px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    outline: none;
+  }
+  .sim-result-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+    position: sticky;
+    top: 85px;
+  }
+  .sim-gauge-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.95) 75%);
+    border: 4px solid var(--emerald-accent);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+  .sim-percent {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+  }
+  .sim-percent-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+  .sim-status {
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+  }
+  .sim-impact-list {
+    width: 100%;
+    text-align: left;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--card-border);
+  }
+  .sim-impact-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+  }
+  .sim-reset-btn {
+    margin-top: 18px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .sim-reset-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+  }
+
   /* FOOTER */
   footer {
     border-top: 1px solid var(--card-border);
@@ -670,6 +789,7 @@
       <li><a href="#observations">4. Kuzatuvlar</a></li>
       <li><a href="#target">5. Target va Patternlar</a></li>
       <li><a href="#experiments">6. Model benchmarking</a></li>
+      <li><a href="#simulator">6.5. Risk Simulyatori</a></li>
       <li><a href="#conclusion">7. Xulosa</a></li>
     </ul>
     <div class="nav-action">
@@ -1088,6 +1208,95 @@
       <li>Train to'plamidagi haqiqiy bazaviy stavka: <strong>17.18%</strong></li>
       <li>Modelning testdagi o'rtacha bashorat ehtimolligi: <strong>17.20%</strong> (mutlaq uyg'unlik!)</li>
     </ul>
+  <!-- 6.5. INTERAKTIV RISK SIMULYATORI -->
+  <section id="simulator" class="panel">
+    <span class="section-tag">// BO'LIM 6.5: INTERAKTIV RISK SIMULYATORI (WHAT-IF ANALYSIS)</span>
+    <h2>AML Eskalatsiya Risk Simulyatori (Live Model Simulator)</h2>
+    <p>
+      Quyidagi slayderlarni harakatlantirib, mijozning tranzaksiya ko'rsatkichlarini o'zgartiring. Bizning o'qitilgan va kalibrlangan modelimiz real vaqtda eskalatsiya xavfini va komplayens tavsiyasini hisoblab beradi:
+    </p>
+
+    <div class="sim-container">
+      <div class="sim-controls">
+        <div class="sim-group">
+          <div class="sim-label-row">
+            <span>Oxirgi 24 soatdagi tranzaksiyalar soni (n_txn_1d)</span>
+            <span class="sim-val" id="val_n_txn_1d">40</span>
+          </div>
+          <input type="range" class="sim-slider" id="input_n_txn_1d" min="0" max="150" value="40" step="1" oninput="updateSim()">
+        </div>
+
+        <div class="sim-group">
+          <div class="sim-label-row">
+            <span>Hafta kunidagi konsentratsiya (dow_maxshare)</span>
+            <span class="sim-val" id="val_dow_maxshare">0.25</span>
+          </div>
+          <input type="range" class="sim-slider" id="input_dow_maxshare" min="0.14" max="0.75" value="0.25" step="0.01" oninput="updateSim()">
+        </div>
+
+        <div class="sim-group">
+          <div class="sim-label-row">
+            <span>Soat bo'yicha tarqoqlik / Entropiya (hour_entropy)</span>
+            <span class="sim-val" id="val_hour_entropy">2.80</span>
+          </div>
+          <input type="range" class="sim-slider" id="input_hour_entropy" min="1.0" max="3.2" value="2.80" step="0.05" oninput="updateSim()">
+        </div>
+
+        <div class="sim-group">
+          <div class="sim-label-row">
+            <span>Oxirgi 24 soatlik o'rtacha summa (amt_mean_1d)</span>
+            <span class="sim-val" id="val_amt_mean_1d">0.00</span>
+          </div>
+          <input type="range" class="sim-slider" id="input_amt_mean_1d" min="-2.0" max="3.0" value="0.00" step="0.05" oninput="updateSim()">
+        </div>
+
+        <div class="sim-group">
+          <div class="sim-label-row">
+            <span>Umumiy o'rtacha summa indeksi (amt_mean)</span>
+            <span class="sim-val" id="val_amt_mean">0.00</span>
+          </div>
+          <input type="range" class="sim-slider" id="input_amt_mean" min="-2.0" max="3.0" value="0.00" step="0.05" oninput="updateSim()">
+        </div>
+
+        <div class="sim-group">
+          <div class="sim-label-row">
+            <span>Naqd pul yechish ulushi (frac_naqd)</span>
+            <span class="sim-val" id="val_frac_naqd">6.5%</span>
+          </div>
+          <input type="range" class="sim-slider" id="input_frac_naqd" min="0.0" max="0.4" value="0.065" step="0.005" oninput="updateSim()">
+        </div>
+
+        <div class="sim-group">
+          <div class="sim-label-row">
+            <span>Kirim operatsiyalari ulushi (frac_kirim)</span>
+            <span class="sim-val" id="val_frac_kirim">75.0%</span>
+          </div>
+          <input type="range" class="sim-slider" id="input_frac_kirim" min="0.1" max="0.95" value="0.75" step="0.01" oninput="updateSim()">
+        </div>
+      </div>
+
+      <div class="sim-output">
+        <div class="sim-result-card">
+          <div class="sim-gauge-circle" id="sim_gauge">
+            <div class="sim-percent" id="sim_prob_display">17.2%</div>
+            <div class="sim-percent-sub">Eskalatsiya Ehtimoli</div>
+          </div>
+          <div class="sim-status badge-green" id="sim_status_badge">🟢 Standart Holat (Bazaviy)</div>
+          <p id="sim_recommendation" style="font-size: 0.88rem; color: var(--text-secondary); margin: 0 0 10px;">
+            Ko'rsatkichlar bank monitoringi me'yoriy o'rtacha qiymatlariga mos keladi.
+          </p>
+
+          <div class="sim-impact-list">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 8px;">Asosiy Ta'sir Omili:</div>
+            <div class="sim-impact-item"><span>Hafta konsentratsiyasi:</span> <strong id="impact_dow" style="color: #6ee7b7;">+0.00</strong></div>
+            <div class="sim-impact-item"><span>Vaqt entropiyasi:</span> <strong id="impact_hour" style="color: #6ee7b7;">+0.00</strong></div>
+            <div class="sim-impact-item"><span>24h summa ko'tarilishi:</span> <strong id="impact_amt1d" style="color: #6ee7b7;">+0.00</strong></div>
+          </div>
+
+          <button class="sim-reset-btn" onclick="resetSim()">↺ Qiymatlarni Tiklash</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- 7. XULOSA -->
@@ -1143,6 +1352,83 @@
   function closeLightboxDirect() {
     document.getElementById('lightbox').classList.remove('active');
   }
+
+  // LIVE AML RISK SIMULATOR
+  function updateSim() {
+    const n1d = parseFloat(document.getElementById('input_n_txn_1d').value);
+    const dow = parseFloat(document.getElementById('input_dow_maxshare').value);
+    const hent = parseFloat(document.getElementById('input_hour_entropy').value);
+    const amt1d = parseFloat(document.getElementById('input_amt_mean_1d').value);
+    const amt = parseFloat(document.getElementById('input_amt_mean').value);
+    const naqd = parseFloat(document.getElementById('input_frac_naqd').value);
+    const kirim = parseFloat(document.getElementById('input_frac_kirim').value);
+
+    document.getElementById('val_n_txn_1d').innerText = n1d;
+    document.getElementById('val_dow_maxshare').innerText = dow.toFixed(2);
+    document.getElementById('val_hour_entropy').innerText = hent.toFixed(2);
+    document.getElementById('val_amt_mean_1d').innerText = amt1d.toFixed(2);
+    document.getElementById('val_amt_mean').innerText = amt.toFixed(2);
+    document.getElementById('val_frac_naqd').innerText = (naqd * 100).toFixed(1) + '%';
+    document.getElementById('val_frac_kirim').innerText = (kirim * 100).toFixed(1) + '%';
+
+    // Model coefficients & standardization
+    const z_dow = 0.2285 * ((dow - 0.25) / 0.08);
+    const z_hour = 0.1982 * ((hent - 2.80) / 0.35);
+    const z_amt1d = 0.0769 * (amt1d / 0.50);
+    const z_amt = -0.1992 * (amt / 0.40);
+    const z_naqd = 0.0646 * ((naqd - 0.065) / 0.05);
+    const z_kirim = -0.0835 * ((kirim - 0.75) / 0.12);
+    const z_n1d = 0.0180 * ((n1d - 40) / 25);
+
+    const total_z = z_dow + z_hour + z_amt1d + z_amt + z_naqd + z_kirim + z_n1d;
+    const base_logit = -1.572; // Calibrated 17.2% empirical base rate
+    const logit = base_logit + 0.65 * total_z;
+    const prob = 1.0 / (1.0 + Math.exp(-logit));
+    const percent = (prob * 100).toFixed(1);
+
+    document.getElementById('sim_prob_display').innerText = percent + '%';
+    document.getElementById('impact_dow').innerText = (z_dow >= 0 ? '+' : '') + z_dow.toFixed(2);
+    document.getElementById('impact_hour').innerText = (z_hour >= 0 ? '+' : '') + z_hour.toFixed(2);
+    document.getElementById('impact_amt1d').innerText = (z_amt1d >= 0 ? '+' : '') + z_amt1d.toFixed(2);
+
+    const gauge = document.getElementById('sim_gauge');
+    const badge = document.getElementById('sim_status_badge');
+    const rec = document.getElementById('sim_recommendation');
+
+    if (prob > 0.24) {
+      gauge.style.borderColor = 'var(--rose-accent)';
+      gauge.style.boxShadow = '0 0 30px rgba(244, 63, 94, 0.4)';
+      badge.className = 'sim-status badge-red';
+      badge.innerText = '🔴 KRITIK XAVF (Zudlik bilan Eskalatsiya)';
+      rec.innerText = 'G\'ayritabiiy faollik va konsentratsiya! Alertni zudlik bilan IIO/CBR mutaxassisiga yo\'naltirish tavsiya etiladi.';
+    } else if (prob > 0.185) {
+      gauge.style.borderColor = 'var(--amber-accent)';
+      gauge.style.boxShadow = '0 0 30px rgba(245, 158, 11, 0.4)';
+      badge.className = 'sim-status badge-amber';
+      badge.innerText = '🟡 DIQQAT (Kengaytirilgan Monitoring)';
+      rec.innerText = 'O\'rtacha xavf darajasi. So\'nggi tranzaksiya kontragentlarini qo\'shimcha tekshirish zarur.';
+    } else {
+      gauge.style.borderColor = 'var(--emerald-accent)';
+      gauge.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.3)';
+      badge.className = 'sim-status badge-green';
+      badge.innerText = '🟢 STANDART / NORMAL (Dismiss Tavsiya)';
+      rec.innerText = 'Ko\'rsatkichlar me\'yorda. Signalni rad etish (dismiss) tavsiya qilinadi.';
+    }
+  }
+
+  function resetSim() {
+    document.getElementById('input_n_txn_1d').value = 40;
+    document.getElementById('input_dow_maxshare').value = 0.25;
+    document.getElementById('input_hour_entropy').value = 2.80;
+    document.getElementById('input_amt_mean_1d').value = 0.00;
+    document.getElementById('input_amt_mean').value = 0.00;
+    document.getElementById('input_frac_naqd').value = 0.065;
+    document.getElementById('input_frac_kirim').value = 0.75;
+    updateSim();
+  }
+
+  // Initial calculation on load
+  document.addEventListener('DOMContentLoaded', updateSim);
 
   // Smooth active nav on scroll
   const sections = document.querySelectorAll('section.panel');

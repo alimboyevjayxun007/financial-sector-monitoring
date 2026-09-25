@@ -42,7 +42,7 @@ def _make_classifier() -> CalibratedClassifierCV:
     base = Pipeline(
         [
             ("scale", StandardScaler()),
-            ("clf", LogisticRegression(max_iter=2000, class_weight="balanced")),
+            ("clf", LogisticRegression(C=0.05, max_iter=2000, class_weight="balanced", random_state=42)),
         ]
     )
     # cv=5 internally cross-validates the calibration mapping so it isn't
