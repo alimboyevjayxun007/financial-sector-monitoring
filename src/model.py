@@ -37,12 +37,14 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from src import config
+
 
 def _make_classifier() -> CalibratedClassifierCV:
     base = Pipeline(
         [
             ("scale", StandardScaler()),
-            ("clf", LogisticRegression(C=0.05, max_iter=2000, class_weight="balanced", random_state=42)),
+            ("clf", LogisticRegression(C=0.05, max_iter=2000, class_weight="balanced", random_state=config.RANDOM_SEED)),
         ]
     )
     # cv=5 internally cross-validates the calibration mapping so it isn't
@@ -59,7 +61,7 @@ def train(features_df: pd.DataFrame, target: pd.Series) -> CalibratedClassifierC
 def cross_validate(features_df: pd.DataFrame, target: pd.Series, n_splits: int = 5) -> float:
     """StratifiedKFold CV (keeps the ~17% positive rate in every fold),
     returns the mean out-of-fold ROC-AUC."""
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=config.RANDOM_SEED)
     X = features_df.reset_index(drop=True)
     y = target.reset_index(drop=True)
 

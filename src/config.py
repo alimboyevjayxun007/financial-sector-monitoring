@@ -20,6 +20,7 @@ TEST_FEATURES_PATH = PROCESSED_DIR / "test_features.parquet"
 
 ID_COL = "signal_id"
 TARGET_COL = "eskalatsiya"
+RANDOM_SEED = 42
 
 # The agreed contract (see ARCHITECTURE.md section 6). Track A must produce
 # exactly these columns (plus TARGET_COL for the train split); Track B must

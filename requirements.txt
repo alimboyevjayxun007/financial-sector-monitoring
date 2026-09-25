@@ -1,14 +1,12 @@
 # Pinned to the versions this pipeline was built and clean-room-verified
 # against (see README.md). Exact pins so `model.pkl` unpickles correctly
 # and results stay reproducible across machines.
-pandas==3.0.3
-numpy==2.4.6
+pandas==3.0.6
+numpy==2.4.4
 pyarrow==25.0.1
-scikit-learn==1.9.0
-joblib==1.5.3
-matplotlib==3.11.0
-jupyter
-pytest
-# only needed to run scripts/model_selection_experiments.py (not the core pipeline)
+scikit-learn==1.9.1
+joblib==1.6.0
+matplotlib==3.10.9
+pytest==9.1.1
 scipy==1.17.1
 lightgbm==4.7.0
