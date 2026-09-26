@@ -1,14 +1,3 @@
-"""Track A: FeatureBuilder.
-
-Aggregates each signal_id's transaction history (as of its signal_sanasi)
-into the fixed set of columns in config.FEATURE_COLUMNS — see
-ARCHITECTURE.md section 6 for the contract.
-
-Hard rule: only tranzaksiya_vaqti <= signal_sanasi rows are used. Transaction
-timestamps run past 2026-12-31 while signals start in 2025, so some
-transaction rows for a given signal_id occur AFTER that signal's date —
-including them would leak the future into the features.
-"""
 import numpy as np
 import pandas as pd
 
@@ -16,26 +5,12 @@ from src import config
 from src.data_loading import load_signals, load_transactions
 
 _TXN_TYPES = ["karta", "bank_otkazmasi", "naqd", "xalqaro"]
-_NIGHT_HOURS = set(range(0, 6))  # 00:00–05:59
+_NIGHT_HOURS = set(range(0, 6))
 _EXTREME_THRESHOLD = 2.0
 _RECENCY_WINDOWS = {"n_txn_1d": 1, "n_txn_7d": 7, "n_txn_30d": 30}
 
 
 def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate transaction history for each signal_id strictly prior to signal_sanasi.
-
-    Computes volume, directional shares, transaction types, extreme value ratios,
-    recency counts (1d/7d/30d), velocity, and temporal Shannon entropy features
-    conforming strictly to config.FEATURE_COLUMNS.
-
-    Args:
-        signals_df: DataFrame containing signal_id, signal_sanasi, and optionally eskalatsiya.
-        transactions_df: DataFrame containing transaction history.
-
-    Returns:
-        pd.DataFrame with exactly one row per input signal, containing signal_id,
-        the 25 feature columns in config.FEATURE_COLUMNS, and target if present.
-    """
     df = transactions_df.merge(
         signals_df[[config.ID_COL, "signal_sanasi"]], on=config.ID_COL, how="inner"
     )
@@ -77,7 +52,6 @@ def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFra
         )
         agg = agg.merge(recent, on=config.ID_COL, how="left")
 
-    # Recent 24-hour direction and amount characteristics:
     df_1d = df[df["days_before"] <= 1.0]
     agg_1d = (
         df_1d.groupby(config.ID_COL)
@@ -89,10 +63,6 @@ def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFra
     )
     agg = agg.merge(agg_1d, on=config.ID_COL, how="left")
 
-    # Concentration of activity across hour-of-day / day-of-week: how spread
-    # out (high entropy) vs. concentrated in a narrow window (high max-share,
-    # low entropy) each signal's transactions are. Validated via 5x5-repeat
-    # CV to add real (p=0.0008), if modest, signal on top of the base set.
     for time_part, entropy_col, maxshare_col in [
         (df["tranzaksiya_vaqti"].dt.hour, "hour_entropy", "hour_maxshare"),
         (df["tranzaksiya_vaqti"].dt.dayofweek, "dow_entropy", "dow_maxshare"),
@@ -103,9 +73,6 @@ def build(signals_df: pd.DataFrame, transactions_df: pd.DataFrame) -> pd.DataFra
         agg = agg.merge(entropy.rename(entropy_col), on=config.ID_COL, how="left")
         agg = agg.merge(shares.max(axis=1).rename(maxshare_col), on=config.ID_COL, how="left")
 
-    # Signals with zero prior transactions never appear in `agg` at all —
-    # reindex to every signal_id so the output always has exactly one row
-    # per input signal, with all-zero features for those cases.
     full = signals_df[[config.ID_COL]].merge(agg, on=config.ID_COL, how="left")
     numeric_cols = [c for c in full.columns if c != config.ID_COL]
     full[numeric_cols] = full[numeric_cols].fillna(0.0)

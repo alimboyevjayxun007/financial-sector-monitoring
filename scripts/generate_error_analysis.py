@@ -49,7 +49,6 @@ for fold, (tr_idx, val_idx) in enumerate(skf.split(X, y), 1):
     X_tr, y_tr = X.iloc[tr_idx], y.iloc[tr_idx]
     X_val, y_val = X.iloc[val_idx], y.iloc[val_idx]
 
-    # Uncalibrated pipeline
     base_pipe = Pipeline([
         ("scale", StandardScaler()),
         ("clf", LogisticRegression(C=0.05, max_iter=2000, class_weight="balanced", random_state=config.RANDOM_SEED))
@@ -57,7 +56,6 @@ for fold, (tr_idx, val_idx) in enumerate(skf.split(X, y), 1):
     base_pipe.fit(X_tr, y_tr)
     oof_uncal[val_idx] = base_pipe.predict_proba(X_val)[:, 1]
 
-    # Calibrated model
     cal_model = CalibratedClassifierCV(base_pipe, method="sigmoid", cv=5)
     cal_model.fit(X_tr, y_tr)
     pred_cal = cal_model.predict_proba(X_val)[:, 1]
@@ -72,26 +70,21 @@ std_auc = np.std(fold_aucs)
 auc_summary_str = f"5-Fold CV ROC-AUC: {mean_auc:.4f} +/- {std_auc:.4f}"
 print(auc_summary_str)
 
-# 1. Confusion Matrix with optimal threshold search
 precisions, recalls, thresholds = precision_recall_curve(y, oof_cal)
-# Find threshold that maximizes F1 score
 f1_scores = 2 * (precisions[:-1] * recalls[:-1]) / (precisions[:-1] + recalls[:-1] + 1e-10)
 best_f1_idx = np.argmax(f1_scores)
 opt_thresh_f1 = float(thresholds[best_f1_idx])
 best_f1 = float(f1_scores[best_f1_idx])
 
-# Also evaluate at empirical base rate threshold ~0.172
 cm_opt = confusion_matrix(y, (oof_cal >= opt_thresh_f1).astype(int))
 cm_base = confusion_matrix(y, (oof_cal >= 0.172).astype(int))
 
 print(f"Optimal F1 Threshold: {opt_thresh_f1:.4f} (Max F1: {best_f1:.4f})")
 print("Confusion Matrix at optimal F1 threshold:\n", cm_opt)
 
-# Generate Plot 1: Confusion Matrix and Threshold Tradeoff
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 plt.style.use('default')
 
-# Confusion matrix heatmap on left
 im = axes[0].imshow(cm_opt, interpolation='nearest', cmap=plt.cm.Blues)
 axes[0].set_title(f"Confusion Matrix (Optimal Threshold = {opt_thresh_f1:.3f})", fontsize=12, fontweight='bold')
 plt.colorbar(im, ax=axes[0], fraction=0.046, pad=0.04)
@@ -112,7 +105,6 @@ for i in range(cm_opt.shape[0]):
 axes[0].set_ylabel('True Label', fontsize=11)
 axes[0].set_xlabel('Predicted Label', fontsize=11)
 
-# Precision-Recall & Threshold Tradeoff on right
 axes[1].plot(thresholds, precisions[:-1], label='Precision', color='#6366f1', lw=2)
 axes[1].plot(thresholds, recalls[:-1], label='Recall', color='#10b981', lw=2)
 axes[1].plot(thresholds, f1_scores, label='F1-Score', color='#f59e0b', lw=2, linestyle='--')
@@ -133,7 +125,6 @@ buf1.seek(0)
 img1_b64 = base64.b64encode(buf1.read()).decode('utf-8')
 plt.close(fig)
 
-# Generate Plot 2: Calibration Curve (Reliability Diagram)
 prob_true_uncal, prob_pred_uncal = calibration_curve(y, oof_uncal, n_bins=10)
 prob_true_cal, prob_pred_cal = calibration_curve(y, oof_cal, n_bins=10)
 
@@ -157,7 +148,6 @@ buf2.seek(0)
 img2_b64 = base64.b64encode(buf2.read()).decode('utf-8')
 plt.close(fig)
 
-# Now construct the comprehensive error_analysis.ipynb
 nb_path = config.ROOT / "notebooks" / "error_analysis.ipynb"
 
 cells = [

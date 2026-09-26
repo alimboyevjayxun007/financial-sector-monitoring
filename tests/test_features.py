@@ -42,7 +42,6 @@ def test_one_row_per_signal_even_with_no_transactions():
     signals = _signals(
         [("SG_1", "2025-06-01", 0), ("SG_2", "2025-06-01", 1), ("SG_3", "2025-06-01", 0)]
     )
-    # SG_3 has no transactions at all
     transactions = _transactions(
         [
             ("SG_1", "2025-05-30", "kirim", "karta", 0.5),
@@ -61,7 +60,6 @@ def test_no_missing_values_anywhere():
     signals = _signals([("SG_1", "2025-06-01", 0), ("SG_2", "2025-06-01", 1)])
     transactions = _transactions(
         [
-            # SG_1 has a single transaction -> std of one value would be NaN
             ("SG_1", "2025-05-30", "kirim", "karta", 0.5),
             ("SG_2", "2025-05-29", "chiqim", "naqd", -0.3),
             ("SG_2", "2025-05-30", "kirim", "bank_otkazmasi", 1.1),
@@ -75,8 +73,8 @@ def test_future_transactions_are_excluded_no_leakage():
     signals = _signals([("SG_1", "2025-06-01", 0)])
     transactions = _transactions(
         [
-            ("SG_1", "2025-05-30", "kirim", "karta", 0.5),  # before signal: kept
-            ("SG_1", "2025-06-02", "kirim", "xalqaro", 9.0),  # after signal: must be dropped
+            ("SG_1", "2025-05-30", "kirim", "karta", 0.5),
+            ("SG_1", "2025-06-02", "kirim", "xalqaro", 9.0),
         ]
     )
     out = build(signals, transactions).iloc[0]

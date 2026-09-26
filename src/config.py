@@ -1,4 +1,3 @@
-"""Shared paths and the feature contract between Track A (features) and Track B (model)."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -23,9 +22,6 @@ ID_COL = "signal_id"
 TARGET_COL = "eskalatsiya"
 RANDOM_SEED = 42
 
-# The agreed contract (see ARCHITECTURE.md section 6). Track A must produce
-# exactly these columns (plus TARGET_COL for the train split); Track B must
-# only ever read these columns by name.
 FEATURE_COLUMNS = [
     "n_txn",
     "amt_mean",

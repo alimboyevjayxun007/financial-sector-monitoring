@@ -1,11 +1,3 @@
-"""Test specific domain-informed features:
-1. amt_mean_1d (already validated +0.0006)
-2. ratio_n_1d_to_7d (acceleration in last 24h vs 7d)
-3. net_amt_flow (amt_kirim_sum - amt_chiqim_sum)
-4. frac_kirim_7d (recent direction ratio)
-5. amt_std_7d (recent volatility)
-6. dow_maxshare & hour_maxshare interaction
-"""
 import sys
 from pathlib import Path
 import numpy as np
@@ -53,14 +45,12 @@ def main():
     df["days_before"] = (df["signal_sanasi"] - df["tranzaksiya_vaqti"]).dt.total_seconds() / 86400
     df["is_kirim"] = (df["kirim_chiqim"] == "kirim").astype(int)
 
-    # 1. amt_mean_1d
     df_1d = df[df["days_before"] <= 1.0]
     agg_1d = df_1d.groupby(config.ID_COL).agg(
         amt_mean_1d=("miqdor_indeksi", "mean"),
         frac_kirim_1d=("is_kirim", "mean"),
     ).reset_index()
 
-    # 2. 7d specifics
     df_7d = df[df["days_before"] <= 7.0]
     agg_7d = df_7d.groupby(config.ID_COL).agg(
         amt_mean_7d=("miqdor_indeksi", "mean"),
@@ -68,20 +58,16 @@ def main():
         frac_kirim_7d=("is_kirim", "mean"),
     ).reset_index()
 
-    # 3. Flow of funds (kirim vs chiqim)
     flow = df.groupby([config.ID_COL, "kirim_chiqim"])["miqdor_indeksi"].sum().unstack(fill_value=0.0)
     flow["net_amt_flow"] = flow.get("kirim", 0.0) - flow.get("chiqim", 0.0)
 
-    # Merge all
     candidates = signals[[config.ID_COL]].merge(agg_1d, on=config.ID_COL, how="left")
     candidates = candidates.merge(agg_7d, on=config.ID_COL, how="left")
     candidates = candidates.merge(flow[["net_amt_flow"]], on=config.ID_COL, how="left")
     candidates = candidates.fillna(0.0)
 
-    # Acceleration ratio
     candidates["ratio_n_1d_to_7d"] = (X_base["n_txn_1d"]) / ((X_base["n_txn_7d"] / 7.0) + 0.1)
 
-    # Test additions
     test_cols = [
         "amt_mean_1d",
         "frac_kirim_1d",
@@ -97,7 +83,6 @@ def main():
         X_test[col] = candidates[col]
         evaluate_subset(X_test, y, f"Base + {col}")
 
-    # Best combined
     X_combo = X_base.copy()
     X_combo["amt_mean_1d"] = candidates["amt_mean_1d"]
     X_combo["amt_std_7d"] = candidates["amt_std_7d"]

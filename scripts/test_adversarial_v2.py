@@ -1,4 +1,3 @@
-"""Check adversarial validation AUC for the new 25-feature set (train vs test shift)."""
 import sys
 from pathlib import Path
 import numpy as np

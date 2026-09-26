@@ -23,7 +23,6 @@ def main():
     current_df = build_current(signals, txns)
     X_curr = current_df[config.FEATURE_COLUMNS].copy()
 
-    # Pre-merge for additional feature calculations
     df = txns.merge(signals[[config.ID_COL, "signal_sanasi"]], on=config.ID_COL, how="inner")
     df = df[df["tranzaksiya_vaqti"] <= df["signal_sanasi"]].copy()
     df["days_before"] = (df["signal_sanasi"] - df["tranzaksiya_vaqti"]).dt.total_seconds() / 86400
@@ -33,19 +32,15 @@ def main():
     df["hour"] = df["tranzaksiya_vaqti"].dt.hour
     df["is_dark_hours"] = df["hour"].isin([1, 2, 3, 4, 5]).astype(int)
 
-    # 1. 3-day transaction count and personal drift
     df_3d = df[df["days_before"] <= 3.0]
     n_3d = df_3d.groupby(config.ID_COL).size().rename("n_txn_3d")
 
-    # 2. Chiqim vs Kirim amounts
     kirim_amt = df[df["is_kirim"] == 1].groupby(config.ID_COL)["miqdor_indeksi"].sum().rename("amt_sum_kirim")
     chiqim_amt = df[df["is_chiqim"] == 1].groupby(config.ID_COL)["miqdor_indeksi"].sum().rename("amt_sum_chiqim")
 
-    # 3. 7-day cash-out intensity
     df_7d = df[df["days_before"] <= 7.0]
     n_naqd_7d = df_7d[df_7d["is_naqd"] == 1].groupby(config.ID_COL).size().rename("n_naqd_7d")
 
-    # 4. Dark hours share
     dark_share = df.groupby(config.ID_COL)["is_dark_hours"].mean().rename("frac_dark_hours")
 
     extra = signals[[config.ID_COL]].merge(n_3d, on=config.ID_COL, how="left")
@@ -55,7 +50,6 @@ def main():
     extra = extra.merge(dark_share, on=config.ID_COL, how="left")
     extra = extra.fillna(0.0)
 
-    # Derived ratios
     extra["vol_ratio_3d_vs_hist"] = (extra["n_txn_3d"] / 3.0) / (X_curr["velocity"] + 0.1)
     extra["ratio_chiqim_to_kirim"] = (extra["amt_sum_chiqim"].abs() + 0.01) / (extra["amt_sum_kirim"].abs() + 0.01)
     extra["cash_intensity_7d"] = extra["n_naqd_7d"] / (X_curr["n_txn_7d"] + 0.1)

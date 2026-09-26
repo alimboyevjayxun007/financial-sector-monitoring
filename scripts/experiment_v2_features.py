@@ -1,6 +1,3 @@
-"""Feature exploration experiment: test candidate v2 features against the 0.5656 baseline.
-Runs 5-fold Stratified CV with Logistic Regression (StandardScaler + class_weight='balanced').
-"""
 import sys
 from pathlib import Path
 import numpy as np
@@ -52,12 +49,10 @@ def main():
     df["is_xalqaro"] = (df["tranzaksiya_turi"] == "xalqaro").astype(int)
     df["is_extreme"] = (df["miqdor_indeksi"].abs() > 2.0).astype(int)
 
-    # Candidate Group A: Recency gap & last transaction proximity
     print("Computing Group A: Recency gap & Last transaction features...")
     recency_gap = df.groupby(config.ID_COL)["days_before"].min().rename("recency_days_min")
     recency_gap_df = signals[[config.ID_COL]].merge(recency_gap, on=config.ID_COL, how="left").fillna(999.0)
 
-    # Candidate Group B: 7-day recent amounts & personal drift
     print("Computing Group B: 7-day amounts & personal drift...")
     df_7d = df[df["days_before"] <= 7.0]
     agg_7d = df_7d.groupby(config.ID_COL).agg(
@@ -69,7 +64,6 @@ def main():
     ).reset_index()
     agg_7d_df = signals[[config.ID_COL]].merge(agg_7d, on=config.ID_COL, how="left").fillna(0.0)
 
-    # Candidate Group C: 1-day amounts
     print("Computing Group C: 1-day amounts...")
     df_1d = df[df["days_before"] <= 1.0]
     agg_1d = df_1d.groupby(config.ID_COL).agg(
@@ -78,7 +72,6 @@ def main():
     ).reset_index()
     agg_1d_df = signals[[config.ID_COL]].merge(agg_1d, on=config.ID_COL, how="left").fillna(0.0)
 
-    # Merge candidate features with base
     X_exp = X_base.copy()
     X_exp["recency_days_min"] = recency_gap_df["recency_days_min"]
     X_exp["amt_mean_7d"] = agg_7d_df["amt_mean_7d"]
@@ -89,7 +82,6 @@ def main():
     X_exp["amt_mean_1d"] = agg_1d_df["amt_mean_1d"]
     X_exp["amt_sum_1d"] = agg_1d_df["amt_sum_1d"]
 
-    # Personal drift from overall mean
     X_exp["drift_amt_mean_7d"] = X_exp["amt_mean_7d"] - X_exp["amt_mean"]
     X_exp["ratio_velocity_7d"] = (X_exp["n_txn_7d"] / 7.0) / (X_exp["velocity"] + 0.01)
 

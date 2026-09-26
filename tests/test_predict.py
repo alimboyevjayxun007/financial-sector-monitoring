@@ -98,19 +98,15 @@ def test_write_produces_valid_submission_file(tmp_path):
 
 
 def test_regression_no_make_dummy_features_in_config():
-    """Verify make_dummy_features is NOT present in src.config (safety lock)."""
     assert not hasattr(config, "make_dummy_features"), (
         "make_dummy_features must NOT exist in src.config (vulnerability guard)"
     )
 
 
 def test_inspect_signal_tool_runs_without_error():
-    """Verify scripts.inspect_signal functions correctly without throwing exceptions."""
     from scripts import inspect_signal
     model, train_df, test_df, mean_coef, mean_center, mean_scale = inspect_signal.load_resources()
     active_df = test_df if test_df is not None else train_df
     if active_df is not None:
         sample_id = active_df.iloc[0][config.ID_COL]
         inspect_signal.inspect_single_signal(sample_id, active_df, model, mean_coef, mean_center, mean_scale)
-
-

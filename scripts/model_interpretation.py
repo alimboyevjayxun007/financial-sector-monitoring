@@ -1,11 +1,6 @@
-"""Compute and visualize model interpretation metrics:
-Standardized Logistic Regression coefficients, Odds Ratios, Top-10 positive / negative features,
-and generate a high-resolution bar plot for presentation and docs.
-"""
 import sys
 from pathlib import Path
 
-# Add project root to sys.path so 'src' can be imported directly
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -22,10 +17,8 @@ def main():
     X = df[config.FEATURE_COLUMNS]
     y = df[config.TARGET_COL]
 
-    # Fit calibrated model and extract average base estimator coefficients
     fitted_model = model.train(X, y)
     
-    # 5-fold ensemble coefficients from CalibratedClassifierCV
     fold_coefs = np.array([
         cc.estimator.named_steps["clf"].coef_[0]
         for cc in fitted_model.calibrated_classifiers_
@@ -33,7 +26,6 @@ def main():
     mean_coefs = np.mean(fold_coefs, axis=0)
     std_coefs = np.std(fold_coefs, axis=0)
 
-    # Feature explanations / domain descriptions
     descriptions = {
         "n_txn": "Umumiy tranzaksiyalar soni",
         "amt_mean": "O'rtacha tranzaksiya miqdori",
@@ -81,18 +73,15 @@ def main():
     for idx, r in top_neg.iterrows():
         print(f"{r['feature']:<20} | Coef: {r['coef']:+.4f} (std: {r['coef_std']:.4f}) | OR: {r['odds_ratio']:.4f} | {r['description']}")
 
-    # Create visualization
     plt.style.use("seaborn-v0_8-whitegrid" if "seaborn-v0_8-whitegrid" in plt.style.available else "default")
     fig, ax = plt.subplots(figsize=(10, 8), dpi=300)
 
-    # Sort for horizontal bar plot (negative at top or bottom)
     plot_df = res_df.sort_values(by="coef", ascending=True)
     colors = ["#e74c3c" if c > 0 else "#2980b9" for c in plot_df["coef"]]
 
     bars = ax.barh(plot_df["feature"], plot_df["coef"], color=colors, alpha=0.85, edgecolor="none", height=0.65)
     ax.axvline(0, color="#2c3e50", linestyle="--", linewidth=1.0, alpha=0.7)
 
-    # Add data labels
     for bar in bars:
         width = bar.get_width()
         ha = "left" if width >= 0 else "right"
@@ -105,7 +94,6 @@ def main():
     ax.set_xlabel("Koeffitsiyent (Log-Odds o'zgarishi / 1 std)", fontsize=10, fontweight="bold")
     ax.set_ylabel("Xususiyat (Feature)", fontsize=10, fontweight="bold")
     
-    # Custom legend elements
     import matplotlib.patches as mpatches
     pos_patch = mpatches.Patch(color="#e74c3c", label="Eskalatsiyaga tortuvchi (Ijobiy ta'sir)")
     neg_patch = mpatches.Patch(color="#2980b9", label="Dismiss'ga tortuvchi (Salbiy ta'sir)")
@@ -113,18 +101,15 @@ def main():
 
     plt.tight_layout()
     
-    # Ensure directories exist
     fig_dir = config.ROOT / "docs" / "assets"
     fig_dir.mkdir(parents=True, exist_ok=True)
     out_fig_path = fig_dir / "feature_importance.png"
     plt.savefig(out_fig_path, bbox_inches="tight")
     
-    # Also save to outputs/
     config.OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
     plt.savefig(config.OUTPUTS_DIR / "feature_importance.png", bbox_inches="tight")
     print(f"\nSaved feature importance figure to:\n - {out_fig_path}\n - {config.OUTPUTS_DIR / 'feature_importance.png'}")
 
-    # Save CSV
     csv_path = config.OUTPUTS_DIR / "feature_importance.csv"
     res_df.to_csv(csv_path, index=False)
     print(f"Saved interpretation table to {csv_path}")

@@ -47,7 +47,6 @@ def test_validate_submission_rejects_constant_probabilities():
 
 def test_validate_submission_rejects_low_variance_distribution():
     ids = pd.Series([f"SG_{i}" for i in range(10)])
-    # std is ~0.0001, strictly lower than required min_std=0.01
     df = pd.DataFrame({"signal_id": ids, "ehtimollik": [0.17 + (0.0001 * (i % 2)) for i in range(10)]})
     with pytest.raises(AssertionError, match="variance too low"):
         validate_submission(df, ids, min_std=0.01)
@@ -62,4 +61,3 @@ def test_validate_submission_on_real_submission_file_if_available():
     sub_df = pd.read_csv(sub_path)
     test_signals = pd.read_csv(config.TEST_SIGNALS_PATH)
     validate_submission(sub_df, test_signals[config.ID_COL])
-

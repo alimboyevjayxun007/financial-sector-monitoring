@@ -1,27 +1,14 @@
-"""Interactive AML Signal Inspector & Local Explainer.
-
-Allows compliance analysts, auditors, and hackathon judges to inspect any individual
-signal_id, see its predicted probability, the automated policy decision based on the
-optimal 0.1560 threshold, and a waterfall-style breakdown of the top positive and negative
-feature contributions driving that specific alert's score.
-
-Usage:
-    python scripts/inspect_signal.py --signal-id <SIGNAL_ID>
-    python scripts/inspect_signal.py --top-risks 3
-"""
 import argparse
 import sys
 from pathlib import Path
 from typing import Optional
 
-# Ensure UTF-8 output encoding on Windows console
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
 
-# Ensure project root is in sys.path
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -67,11 +54,9 @@ def load_resources():
         raise FileNotFoundError(f"{config.MODEL_PATH} not found. Run `python -m src.train` first.")
     model = joblib.load(config.MODEL_PATH)
 
-    # Load test or train features
     test_df = pd.read_parquet(config.TEST_FEATURES_PATH) if config.TEST_FEATURES_PATH.exists() else None
     train_df = pd.read_parquet(config.TRAIN_FEATURES_PATH) if config.TRAIN_FEATURES_PATH.exists() else None
 
-    # Extract base estimator coefficients and standardizer mean/scale
     base_estimators = [cc.estimator for cc in model.calibrated_classifiers_]
     mean_coef = np.mean([be.named_steps["clf"].coef_[0] for be in base_estimators], axis=0)
     mean_scale = np.mean([be.named_steps["scale"].scale_ for be in base_estimators], axis=0)
@@ -97,7 +82,6 @@ def inspect_single_signal(
     X_raw = row[config.FEATURE_COLUMNS].to_numpy(dtype=float)
     proba = float(model.predict_proba(row_match[config.FEATURE_COLUMNS])[0, 1])
 
-    # Standardized features and linear contribution
     X_std = (X_raw - mean_center) / mean_scale
     contributions = X_std * mean_coef
 
@@ -156,7 +140,6 @@ def main():
         return
 
     if args.signal_id:
-        # Check in active df, then train df
         df_target = active_df
         if args.signal_id not in df_target[config.ID_COL].values and train_df is not None:
             df_target = train_df
@@ -170,7 +153,6 @@ def main():
         for sid in top_ids:
             inspect_single_signal(sid, active_df, model, mean_coef, mean_center, mean_scale)
     else:
-        # Demo mode: show 1 highest risk and 1 lowest risk signal
         print("\n⚡ Signal Inspector Demo (misol tariqasida eng yuqori va eng past riskli signallar):\n")
         preds = model.predict_proba(active_df[config.FEATURE_COLUMNS])[:, 1]
         active_df_copy = active_df.copy()

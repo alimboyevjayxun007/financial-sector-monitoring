@@ -1,19 +1,3 @@
-"""
-EDA chart generator — WUIT Hackathon, Fintech Track (AML signal escalation).
-
-Bu skript xom ma'lumotlarni (fintech_track_data/fintech_data/*) o'qib,
-docs/index.html sahifasida ishlatiladigan barcha PNG grafiklarni
-docs/assets/ papkasiga generatsiya qiladi.
-
-Ishga tushirish:
-    python3 generate_charts.py
-
-Talab qilinadigan kutubxonalar: pandas, numpy, pyarrow, matplotlib
-(loyihaning tizim python3'ida allaqachon o'rnatilgan).
-
-Eslatma: bu skript faqat O'QIYDI — fintech_track_data/ ichidagi hech qanday
-faylni o'zgartirmaydi yoki qayta yozmaydi.
-"""
 
 from __future__ import annotations
 
@@ -27,9 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# ---------------------------------------------------------------------------
-# Sozlamalar
-# ---------------------------------------------------------------------------
 
 HERE = pathlib.Path(__file__).resolve().parent
 REPO_ROOT = HERE.parent
@@ -37,19 +18,14 @@ DATA_DIR = REPO_ROOT / "fintech_track_data" / "fintech_data"
 ASSETS_DIR = HERE / "assets"
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
-# src.features.build() ni ishlatamiz (o'zimizning mustaqil nusxasini
-# yozish o'rniga) — shunda bu sayt qachondir production feature kontraktidan
-# (masalan yangi feature qo'shilganda) chetlashib qolmaydi. Ilgari bu skript
-# aggregatsiya logikasini mustaqil qayta yozgan edi va faqat 11/22 ta
-# production feature'ni qamrardi (audit topilmasi) — endi bitta manba bor.
 sys.path.insert(0, str(REPO_ROOT))
-from src import config as feature_config  # noqa: E402
-from src.features import build as build_production_features  # noqa: E402
+from src import config as feature_config
+from src.features import build as build_production_features
 
-COLOR_DISMISS = "#3b82f6"   # ko'k — dismiss (0)
-COLOR_ESCALATE = "#ef4444"  # qizil — escalate (1)
-COLOR_NEUTRAL = "#6366f1"   # binafsha-ko'k — neytral grafiklar
-COLOR_ACCENT = "#10b981"    # yashil — ikkinchi urg'u rangi
+COLOR_DISMISS = "#3b82f6"
+COLOR_ESCALATE = "#ef4444"
+COLOR_NEUTRAL = "#6366f1"
+COLOR_ACCENT = "#10b981"
 
 plt.rcParams.update(
     {
@@ -77,10 +53,6 @@ def savefig(fig, name: str) -> None:
     print(f"  saqlandi: {out_path.relative_to(REPO_ROOT)}  ({size_kb:.1f} KB)")
 
 
-# ---------------------------------------------------------------------------
-# 1. Ma'lumotlarni yuklash
-# ---------------------------------------------------------------------------
-
 print("Ma'lumotlar yuklanmoqda...")
 
 train_signals = pd.read_csv(DATA_DIR / "train_signals.csv")
@@ -101,13 +73,8 @@ print(
     f"test_transactions: {len(test_txn):,} qator"
 )
 
-# Barcha tranzaksiyalar (train+test) — dataset darajasidagi umumiy ko'rinish uchun
 all_txn = pd.concat([train_txn, test_txn], ignore_index=True)
 
-# ---------------------------------------------------------------------------
-# 2. Signal darajasidagi agregat xususiyatlarni hisoblash (faqat train uchun,
-#    leakage'ga qarshi qoida bilan: faqat tranzaksiya_vaqti <= signal_sanasi)
-# ---------------------------------------------------------------------------
 
 print("Signal darajasidagi agregat xususiyatlar hisoblanmoqda (leakage filtri bilan)...")
 
@@ -115,9 +82,6 @@ print("Signal darajasidagi agregat xususiyatlar hisoblanmoqda (leakage filtri bi
 train_feats = build_production_features(train_signals, train_txn)
 print(f"  train feature jadvali (production 22-feature kontrakti): {train_feats.shape}")
 
-# ---------------------------------------------------------------------------
-# 3. Chart 1 — Target sinf taqsimoti
-# ---------------------------------------------------------------------------
 
 print("Grafik 1/8: target taqsimoti...")
 
@@ -143,9 +107,6 @@ ax.set_title("Target taqsimoti: dismiss vs escalate (train, n=14 000)", fontsize
 ax.set_ylim(0, max(counts) * 1.2)
 savefig(fig, "01_target_distribution.png")
 
-# ---------------------------------------------------------------------------
-# 4. Chart 2 — Vaqt bo'yicha tranzaksiya hajmi (haftalik)
-# ---------------------------------------------------------------------------
 
 print("Grafik 2/8: vaqt bo'yicha tranzaksiya hajmi...")
 
@@ -164,9 +125,6 @@ ax.set_xlabel("Sana")
 fig.autofmt_xdate()
 savefig(fig, "02_transactions_over_time.png")
 
-# ---------------------------------------------------------------------------
-# 5. Chart 3 — kirim vs chiqim
-# ---------------------------------------------------------------------------
 
 print("Grafik 3/8: kirim vs chiqim...")
 
@@ -185,9 +143,6 @@ ax.set_title(
 )
 savefig(fig, "03_kirim_chiqim.png")
 
-# ---------------------------------------------------------------------------
-# 6. Chart 4 — tranzaksiya_turi taqsimoti
-# ---------------------------------------------------------------------------
 
 print("Grafik 4/8: tranzaksiya turi taqsimoti...")
 
@@ -208,9 +163,6 @@ ax.set_title("Tranzaksiya turi bo'yicha taqsimot")
 ax.set_xlim(0, type_counts.max() * 1.25)
 savefig(fig, "04_tranzaksiya_turi.png")
 
-# ---------------------------------------------------------------------------
-# 7. Chart 5 — miqdor_indeksi (amt_mean per signal), escalate vs dismiss
-# ---------------------------------------------------------------------------
 
 print("Grafik 5/8: amt_mean taqsimoti (escalate vs dismiss)...")
 
@@ -237,9 +189,6 @@ ax.set_title("Signal bo'yicha o'rtacha tranzaksiya summasi: escalate vs dismiss"
 ax.legend()
 savefig(fig, "05_amt_mean_distribution.png")
 
-# ---------------------------------------------------------------------------
-# 8. Chart 6 — signal boshiga tranzaksiyalar soni taqsimoti
-# ---------------------------------------------------------------------------
 
 print("Grafik 6/8: signal boshiga tranzaksiyalar soni...")
 
@@ -274,9 +223,6 @@ ax.set_title("Signal boshiga tranzaksiyalar soni taqsimoti")
 ax.legend()
 savefig(fig, "06_n_txn_distribution.png")
 
-# ---------------------------------------------------------------------------
-# 9. Chart 7 — signal oldidan so'nggi 1/7/30 kunlik faollik, target bo'yicha
-# ---------------------------------------------------------------------------
 
 print("Grafik 7/8: signal oldidan so'nggi faollik...")
 
@@ -317,13 +263,10 @@ ax.set_title("Signal sanasidan oldingi faollik: escalate vs dismiss")
 ax.legend()
 savefig(fig, "07_recent_activity.png")
 
-# ---------------------------------------------------------------------------
-# 10. Chart 8 — agregat xususiyatlarning target bilan korrelyatsiyasi
-# ---------------------------------------------------------------------------
 
 print("Grafik 8/8: xususiyatlar korrelyatsiyasi...")
 
-corr_cols = feature_config.FEATURE_COLUMNS  # barcha 22 ta production feature
+corr_cols = feature_config.FEATURE_COLUMNS
 corrs = train_feats[corr_cols + ["eskalatsiya"]].corr()["eskalatsiya"].drop("eskalatsiya")
 corrs = corrs.sort_values()
 

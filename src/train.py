@@ -1,4 +1,3 @@
-"""Track B: training entry point."""
 import logging
 from pathlib import Path
 from typing import Tuple
@@ -10,7 +9,6 @@ from sklearn.calibration import CalibratedClassifierCV
 from src import config
 from src.model import cross_validate, train
 
-# Setup module logger
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -19,17 +17,6 @@ logger = logging.getLogger("src.train")
 
 
 def load_train_features(path: Path = config.TRAIN_FEATURES_PATH) -> pd.DataFrame:
-    """Load pre-computed train features from parquet.
-
-    Args:
-        path: Path to the processed training features parquet file.
-
-    Returns:
-        pd.DataFrame containing feature columns and target column.
-
-    Raises:
-        FileNotFoundError: If the feature file does not exist.
-    """
     if not path.exists():
         raise FileNotFoundError(
             f"{path} not found — run `python3 -m src.features` "
@@ -46,14 +33,6 @@ def load_train_features(path: Path = config.TRAIN_FEATURES_PATH) -> pd.DataFrame
 def run_train(
     save_path: Path = config.MODEL_PATH,
 ) -> Tuple[CalibratedClassifierCV, float]:
-    """Execute model training, evaluate via cross-validation, and serialize the fitted model.
-
-    Args:
-        save_path: Target path for the serialized model artifact.
-
-    Returns:
-        Tuple containing the fitted CalibratedClassifierCV model and the mean CV ROC-AUC score.
-    """
     df = load_train_features()
     X = df[config.FEATURE_COLUMNS]
     y = df[config.TARGET_COL]

@@ -1,6 +1,3 @@
-# Pinned to the versions this pipeline was built and clean-room-verified
-# against (see README.md). Exact pins so `model.pkl` unpickles correctly
-# and results stay reproducible across machines.
 pandas==3.0.6
 numpy==2.4.4
 pyarrow==25.0.1
@@ -10,3 +7,4 @@ matplotlib==3.10.9
 pytest==9.1.1
 scipy==1.17.1
 lightgbm==4.7.0
+jupyter

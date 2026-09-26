@@ -1,10 +1,3 @@
-"""Systematic Model & Feature tuning script.
-Tests:
-1. C-parameter regularization scan for LogisticRegression (C in [0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0])
-2. Impact of amt_mean_1d and amt_mean_7d
-3. MLPClassifier tuning (hidden_layer_sizes, alpha)
-4. Rank-Average ensemble of LR + MLP
-"""
 import sys
 from pathlib import Path
 import numpy as np
@@ -31,7 +24,6 @@ def main():
     base_df = build_v1(signals, txns)
     X = base_df[config.FEATURE_COLUMNS].copy()
 
-    # Also compute amt_mean_1d
     df = txns.merge(signals[[config.ID_COL, "signal_sanasi"]], on=config.ID_COL, how="inner")
     df = df[df["tranzaksiya_vaqti"] <= df["signal_sanasi"]].copy()
     df["days_before"] = (df["signal_sanasi"] - df["tranzaksiya_vaqti"]).dt.total_seconds() / 86400

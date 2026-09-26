@@ -1,27 +1,3 @@
-"""Model selection experiments — the reproducible source of every number
-cited in README.md sections 5.1/5.1.1/5.2.
-
-This script exists because an earlier version of the project cited detailed
-CV numbers (mean AUC, std, p-values) that were reported by a background
-subagent but never actually committed as runnable code — an audit correctly
-flagged that as unverifiable and indistinguishable from confabulation. This
-script is the fix: every number in the README's model-comparison tables must
-trace back to a run of this file.
-
-Run: python3 scripts/model_selection_experiments.py
-Output: prints a full report AND writes scripts/model_selection_results.csv
-
-Runtime: ~3-6 minutes (SVC and the LightGBM search are the slow parts).
-
-Statistical note: naive paired t-tests on RepeatedStratifiedKFold scores are
-anti-conservative (Dietterich 1998; Nadeau & Bengio 2003) because k-fold
-resampling produces overlapping train/validation sets across folds/repeats,
-violating the independence assumption. This script reports BOTH the naive
-paired t-test and the Nadeau-Bengio corrected version, and the corrected
-p-value is what README actually cites. We also ran ~10 comparisons here, so
-even the corrected p-value should be read as one data point, not proof —
-README says so explicitly rather than overclaiming significance.
-"""
 import pathlib
 import sys
 import time
@@ -44,7 +20,7 @@ from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.svm import SVC
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
-from src import config  # noqa: E402
+from src import config
 
 try:
     from lightgbm import LGBMClassifier
@@ -101,8 +77,6 @@ def naive_paired_ttest(diffs):
 
 
 def nadeau_bengio_test(diffs, k=5):
-    """Corrected variance paired t-test for k-fold (repeated) CV comparisons.
-    Ref: Nadeau & Bengio (2003), 'Inference for the Generalization Error'."""
     n = len(diffs)
     mean_diff = diffs.mean()
     var_diff = diffs.var(ddof=1)
@@ -253,7 +227,6 @@ def main():
     record("CalibratedClassifierCV(LR, sigmoid)", "22", cal_scores,
            note="AUC should ~match uncalibrated LR; calibration changes probabilities, not ranking")
 
-    # Actual calibration quality: mean predicted vs true base rate, uncalibrated vs calibrated
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     uncal_preds, cal_preds, true_vals = [], [], []
     for tr_idx, va_idx in skf.split(X22, y):

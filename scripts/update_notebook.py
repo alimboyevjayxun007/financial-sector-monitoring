@@ -49,7 +49,6 @@ head_df = predictions.head()
 head_html = head_df.to_html()
 head_text = head_df.to_string()
 
-# Now construct the pristine notebook JSON
 nb_path = config.ROOT / "notebooks" / "submission_pipeline.ipynb"
 
 cells = [

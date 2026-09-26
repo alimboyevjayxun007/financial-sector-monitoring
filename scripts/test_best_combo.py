@@ -1,9 +1,3 @@
-"""Test combination of top recency features:
-- frac_kirim_1d
-- ratio_n_1d_to_7d
-- amt_mean_1d
-Evaluate with 5-fold CV and 5x5 RepeatedStratifiedKFold with Nadeau-Bengio corrected p-value.
-"""
 import sys
 from pathlib import Path
 import numpy as np
