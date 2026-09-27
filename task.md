@@ -1,7 +1,7 @@
 # AML Alert Prioritization
 
 > **WIUT Hackathon 2026 · FinTech / AI in Finance**  
-> **Team:** DnkCode (`2ABB3C78`)  
+> **Team:** Kinsei (`2ABB3C78`)  
 > **Submission deadline:** Sunday, 27 September 2026, 23:59 (Tashkent time)
 
 ## Challenge

@@ -1,4 +1,4 @@
-# AML Alert Prioritization — DnkCode
+# AML Alert Prioritization — Kinsei
 
 WIUT Hackathon 2026 · FinTech / AI in Finance · Team `2ABB3C78`
 

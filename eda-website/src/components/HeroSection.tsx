@@ -226,8 +226,8 @@ export function HeroSection() {
           
           <div className="flex items-baseline pt-0.5">
             <a className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-baseline select-none" href="#">
-              <span className="text-white font-semibold">Dnk</span>
-              <span className="text-[#22f396] neon-logo-glow font-bold ml-[1px]">Code</span>
+              <span className="text-white font-semibold">Kin</span>
+              <span className="text-[#22f396] neon-logo-glow font-bold ml-[1px]">sei</span>
             </a>
           </div>
         </div>
