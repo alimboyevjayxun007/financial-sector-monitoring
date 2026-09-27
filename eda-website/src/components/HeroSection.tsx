@@ -236,7 +236,7 @@ export function HeroSection() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-950/40 backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-[#22f396] animate-pulse"></span>
             <span className="font-mono text-[11px] sm:text-xs tracking-widest text-slate-300 uppercase">
-              TEAM: <span className="text-[#22f396] font-bold">Kinsei</span> <span className="text-cyan-600">|</span> ID: <span className="text-white font-mono font-bold tracking-normal">2ABB3C78</span>
+              TEAM: <span className="text-[#22f396] font-bold">Kinsei</span> <span className="text-cyan-600">|</span> ID: <span className="text-white font-mono font-bold tracking-normal">C6FD20A0</span>
             </span>
           </div>
         </div>

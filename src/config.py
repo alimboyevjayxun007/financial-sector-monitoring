@@ -20,7 +20,7 @@ TRAIN_TX = DATA / "train_transactions.parquet"
 TEST_TX = DATA / "test_transactions.parquet"
 SAMPLE_SUBMISSION = DATA / "sample_submission (3).csv"
 
-SUBMISSION_NAME = "team_2ABB3C78.csv"
+SUBMISSION_NAME = "team_C6FD20A0.csv"
 
 DIRECTIONS = ("kirim", "chiqim")
 TX_TYPES = ("karta", "bank_otkazmasi", "naqd", "xalqaro")

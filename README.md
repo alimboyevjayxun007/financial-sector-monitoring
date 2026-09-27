@@ -1,6 +1,6 @@
 # AML Alert Prioritization — Kinsei
 
-WIUT Hackathon 2026 · FinTech / AI in Finance · Team `2ABB3C78`
+WIUT Hackathon 2026 · FinTech / AI in Finance · Team `C6FD20A0`
 
 Predict the probability that an AML alert is escalated. Metric: ROC-AUC.
 
@@ -35,7 +35,7 @@ python -c "import pyarrow.parquet as pq; print(pq.ParquetFile('fintech_data/test
 
 | Deliverable | Where | How to rebuild |
 | --- | --- | --- |
-| Prediction CSV | `outputs/team_2ABB3C78.csv` | `python -m src.pipeline` |
+| Prediction CSV | `outputs/team_C6FD20A0.csv` | `python -m src.pipeline` |
 | EDA website | `docs/index.html` | `python -m src.build_site` |
 | Reproducible notebook | `notebooks/final_solution.ipynb` | see below |
 

@@ -18,6 +18,6 @@ def _redirect_experiment_artifacts(tmp_path_factory):
     validation.LOG_PATH = scratch / "log.csv"
     selection.SELECTION_PATH = scratch / "selected_features.json"
     # submission.py binds OUTPUTS at import time; without this a fixture run
-    # writes a synthetic team_2ABB3C78.csv into the real outputs/ directory.
+    # writes a synthetic team_C6FD20A0.csv into the real outputs/ directory.
     submission.OUTPUTS = scratch / "outputs"
     yield

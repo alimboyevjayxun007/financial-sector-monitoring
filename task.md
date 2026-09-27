@@ -1,7 +1,7 @@
 # AML Alert Prioritization
 
 > **WIUT Hackathon 2026 · FinTech / AI in Finance**  
-> **Team:** Kinsei (`2ABB3C78`)  
+> **Team:** Kinsei (`C6FD20A0`)  
 > **Submission deadline:** Sunday, 27 September 2026, 23:59 (Tashkent time)
 
 ## Challenge
@@ -78,7 +78,7 @@ Possible visualizations include transaction activity over time, incoming versus 
 
 Submit all three deliverables:
 
-1. Prediction file: `team_2ABB3C78.csv`
+1. Prediction file: `team_C6FD20A0.csv`
 2. A working public URL for the EDA website
 3. A reproducible Jupyter notebook
 
@@ -97,7 +97,7 @@ Submission requirements:
 - preserve the test IDs and do not include duplicates, missing IDs, or extra IDs;
 - provide a non-missing `ehtimollik` value between `0` and `1` for every row;
 - do not include a CSV index column;
-- use the filename `team_2ABB3C78.csv`.
+- use the filename `team_C6FD20A0.csv`.
 
 Late submissions will not be assessed.
 

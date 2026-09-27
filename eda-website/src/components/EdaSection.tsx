@@ -588,7 +588,7 @@ export function EdaSection() {
               {t.teamInfo}
               <span className="w-2 h-2 rounded-full bg-[#22f396] animate-ping"></span>
             </h3>
-            <p className="text-[#22f396] text-xs font-mono tracking-widest uppercase font-bold">TEAM ID: 2ABB3C78</p>
+            <p className="text-[#22f396] text-xs font-mono tracking-widest uppercase font-bold">TEAM ID: C6FD20A0</p>
           </div>
         </div>
         <p className="text-slate-600 text-xs mt-2 font-mono">
