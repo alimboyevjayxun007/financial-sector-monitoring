@@ -10,23 +10,34 @@ import './index.css';
 gsap.registerPlugin(ScrollTrigger);
 
 function App() {
-  const [lang, setLang] = useState('ru');
+  const [lang, setLang] = useState('en');
   const t = translations[lang as keyof typeof translations];
 
   useEffect(() => {
     // Lenis is handled globally in main.tsx by <ReactLenis>
   }, []);
 
+  const languageOptions = [
+    { code: 'en', label: 'EN', title: 'English' },
+    { code: 'uz', label: 'UZ', title: "O'zbekcha" },
+    { code: 'ru', label: 'RU', title: 'Русский' }
+  ];
+
   return (
     <LanguageContext.Provider value={lang}>
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
-        {['ru', 'en', 'uz'].map((l) => (
+      <div className="fixed top-5 right-6 z-50 flex items-center bg-[#07131d]/90 backdrop-blur-md border border-[#22f396]/30 p-1 rounded-full shadow-[0_0_20px_rgba(34,243,150,0.15)]">
+        {languageOptions.map((item) => (
           <button 
-            key={l}
-            onClick={() => setLang(l)}
-            className={"px-3 py-1 text-xs font-mono uppercase rounded border transition-colors " + (lang === l ? "bg-[#22f396]/20 border-[#22f396] text-[#22f396]" : "bg-black/50 border-cyan-900/50 text-slate-400 hover:border-[#22f396]/50")}
+            key={item.code}
+            onClick={() => setLang(item.code)}
+            title={item.title}
+            className={`px-3.5 py-1 text-xs font-mono uppercase rounded-full transition-all duration-300 font-bold tracking-wider ${
+              lang === item.code 
+                ? "bg-[#22f396] text-[#030708] shadow-[0_0_12px_rgba(34,243,150,0.6)] scale-105" 
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
           >
-            {l}
+            {item.label}
           </button>
         ))}
       </div>

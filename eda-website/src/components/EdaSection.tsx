@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { LanguageContext, translations } from '../locales/translations';
 import { data } from '../data/mockData';
 
@@ -6,6 +6,7 @@ export function EdaSection() {
   const lang = useContext(LanguageContext);
   const t = translations[lang as keyof typeof translations];
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'time' | 'types' | 'burst' | 'outcome'>('all');
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -211,12 +212,41 @@ export function EdaSection() {
             {t.edaTitle}
           </h2>
         </header>
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
-          
-          {/* ==========================================
+
+        {/* Animated Cyber Tabs / Category Switcher */}
+        <div className="w-full flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-10 max-w-4xl">
+          {[
+            { id: 'all', label: t.tabAll, icon: '✦' },
+            { id: 'time', label: t.tabTime, icon: '⏱' },
+            { id: 'types', label: t.tabTypes, icon: '📊' },
+            { id: 'burst', label: t.tabBurst, icon: '⚡' },
+            { id: 'outcome', label: t.tabOutcome, icon: '🎯' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`group relative px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 border cursor-pointer ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-emerald-500/20 text-[#22f396] border-[#22f396] shadow-[0_0_20px_rgba(34,243,150,0.3)] scale-105'
+                  : 'bg-[#050b12]/80 text-slate-400 border-cyan-900/30 hover:border-cyan-500/50 hover:text-white hover:bg-cyan-950/30'
+              }`}
+            >
+              <span className={`text-xs transition-transform duration-300 group-hover:scale-125 ${activeTab === tab.id ? 'text-[#22f396]' : 'text-cyan-400/70'}`}>
+                {tab.icon}
+              </span>
+              <span>{tab.label}</span>
+              {activeTab === tab.id && (
+                <span className="absolute -bottom-[1px] left-1/4 right-1/4 h-[2px] bg-[#22f396] shadow-[0_0_8px_#22f396]"></span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">          {/* ==========================================
                  TOP-LEFT SECTION: Time Series Activity
-            =========================================== */}
-          <article className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch" data-purpose="chart-card-group">
+             =========================================== */}
+          {(activeTab === 'all' || activeTab === 'time') && (
+          <article className={`grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch p-4 rounded-2xl border transition-all duration-500 ${activeTab !== 'all' ? 'lg:col-span-2 bg-[#050b12]/90 border-[#22f396]/40 shadow-[0_0_30px_rgba(34,243,150,0.15)]' : 'border-transparent hover:border-cyan-900/30'}`} data-purpose="chart-card-group">
             <div className="md:col-span-7 flex flex-col justify-end pt-4 pr-2">
               <div className="relative w-full aspect-[16/10] sm:aspect-[16/9]">
                 <svg aria-label={t.timeActivityChart} className="w-full h-full overflow-visible drop-shadow-xl" viewBox="0 0 460 260">
@@ -267,11 +297,13 @@ export function EdaSection() {
               <p className="text-slate-400 text-sm leading-relaxed">{t.timeActivityDesc2}</p>
             </div>
           </article>
+          )}
 
           {/* ==========================================
                  TOP-RIGHT SECTION: Directions & Transaction Types
-            =========================================== */}
-          <article className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch" data-purpose="chart-card-group">
+             =========================================== */}
+          {(activeTab === 'all' || activeTab === 'types') && (
+          <article className={`grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch p-4 rounded-2xl border transition-all duration-500 ${activeTab !== 'all' ? 'lg:col-span-2 bg-[#050b12]/90 border-[#22f396]/40 shadow-[0_0_30px_rgba(34,243,150,0.15)]' : 'border-transparent hover:border-cyan-900/30'}`} data-purpose="chart-card-group">
             <div className="md:col-span-7 flex flex-col justify-end pt-4 pr-2">
               <div className="relative w-full aspect-[16/10] sm:aspect-[16/9]">
                 <svg aria-label={t.transactionHistogram} className="w-full h-full overflow-visible drop-shadow-xl" viewBox="0 0 460 260">
@@ -321,11 +353,13 @@ export function EdaSection() {
               <p className="text-slate-400 text-sm leading-relaxed">{t.transactionTypesDesc2}</p>
             </div>
           </article>
+          )}
 
           {/* ==========================================
                  BOTTOM-LEFT SECTION: Surge Before Alert
-            =========================================== */}
-          <article className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch" data-purpose="chart-card-group">
+             =========================================== */}
+          {(activeTab === 'all' || activeTab === 'burst') && (
+          <article className={`grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch p-4 rounded-2xl border transition-all duration-500 ${activeTab !== 'all' ? 'lg:col-span-2 bg-[#050b12]/90 border-[#22f396]/40 shadow-[0_0_30px_rgba(34,243,150,0.15)]' : 'border-transparent hover:border-cyan-900/30'}`} data-purpose="chart-card-group">
             <div className="md:col-span-5 order-2 md:order-1 p-4 sm:p-6 flex flex-col justify-center">
               <h2 className="text-white text-lg font-medium mb-4 leading-snug">{t.patternBurst}</h2>
               <p className="text-slate-400 text-sm leading-relaxed">{t.patternBurstDesc}</p>
@@ -376,11 +410,13 @@ export function EdaSection() {
               </div>
             </div>
           </article>
+          )}
 
           {/* ==========================================
                  BOTTOM-RIGHT SECTION: Breakdown by Outcome
-            =========================================== */}
-          <article className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch" data-purpose="chart-card-group">
+             =========================================== */}
+          {(activeTab === 'all' || activeTab === 'outcome') && (
+          <article className={`grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch p-4 rounded-2xl border transition-all duration-500 ${activeTab !== 'all' ? 'lg:col-span-2 bg-[#050b12]/90 border-[#22f396]/40 shadow-[0_0_30px_rgba(34,243,150,0.15)]' : 'border-transparent hover:border-cyan-900/30'}`} data-purpose="chart-card-group">
             <div className="md:col-span-7 flex flex-col justify-end pt-4 pr-2">
               <div className="relative w-full aspect-[16/10] sm:aspect-[16/9]">
                 <svg aria-label={t.outcomeChart} className="w-full h-full overflow-visible drop-shadow-xl" viewBox="0 0 460 260">
@@ -451,6 +487,7 @@ export function EdaSection() {
               <p className="text-slate-400 text-sm leading-relaxed">{t.typesByOutcomeDesc2}</p>
             </div>
           </article>
+          )}
         </div>
 
         {/* --- TARGET DISTRIBUTION (Required by Hackathon TZ) --- */}
@@ -543,12 +580,15 @@ export function EdaSection() {
       {/* --- FOOTER / TEAM SECTION --- */}
       <footer className="relative z-10 w-full max-w-[1024px] mb-8 mt-auto flex flex-col items-center justify-center border-t border-cyan-900/30 pt-8 pb-4">
         <div className="flex items-center gap-4 mb-3">
-          <div className="w-10 h-10 rounded-full border border-cyan-500/30 bg-cyan-950/40 flex items-center justify-center neon-logo-glow">
-            <span className="font-mono text-cyan-400 font-bold">D</span>
+          <div className="w-11 h-11 rounded-full border border-[#22f396]/40 bg-[#06242c]/70 flex items-center justify-center neon-logo-glow shadow-[0_0_15px_rgba(34,243,150,0.3)]">
+            <span className="font-mono text-[#22f396] font-extrabold text-lg">K</span>
           </div>
           <div>
-            <h3 className="text-white font-medium text-lg tracking-wide">{t.teamInfo}</h3>
-            <p className="text-cyan-500/70 text-xs font-mono tracking-widest uppercase">ID: 2ABB3C78</p>
+            <h3 className="text-white font-semibold text-lg tracking-wide flex items-center gap-2">
+              {t.teamInfo}
+              <span className="w-2 h-2 rounded-full bg-[#22f396] animate-ping"></span>
+            </h3>
+            <p className="text-[#22f396] text-xs font-mono tracking-widest uppercase font-bold">TEAM ID: 2ABB3C78</p>
           </div>
         </div>
         <p className="text-slate-600 text-xs mt-2 font-mono">

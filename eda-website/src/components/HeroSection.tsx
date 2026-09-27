@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { LanguageContext, translations } from '../locales/translations';
 
 export function HeroSection() {
@@ -232,10 +232,13 @@ export function HeroSection() {
           </div>
         </div>
         
-        <div className="text-right pt-1">
-          <span className="font-mono text-xs sm:text-[13px] tracking-widest text-[#4e6473] uppercase">
-            TEAM ID: <span className="text-[#647c8c] tracking-normal font-semibold">2ABB3C78</span>
-          </span>
+        <div className="text-right pt-1 flex flex-col items-end">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-950/40 backdrop-blur-sm">
+            <span className="w-2 h-2 rounded-full bg-[#22f396] animate-pulse"></span>
+            <span className="font-mono text-[11px] sm:text-xs tracking-widest text-slate-300 uppercase">
+              TEAM: <span className="text-[#22f396] font-bold">Kinsei</span> <span className="text-cyan-600">|</span> ID: <span className="text-white font-mono font-bold tracking-normal">2ABB3C78</span>
+            </span>
+          </div>
         </div>
       </header>
       

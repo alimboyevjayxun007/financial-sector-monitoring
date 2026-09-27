@@ -65,7 +65,12 @@ export const translations = {
     bankOtk: "Банк Отказмаси",
     naqdXalq: "Накд / Халкаро",
     targetPlaceholder: "ГРАФ: РАСПРЕДЕЛЕНИЕ ТАРГЕТА",
-    footerEvent: "WIUT Хакатон 2026 · FinTech / ИИ в Финансах"
+    footerEvent: "WIUT Хакатон 2026 · FinTech / ИИ в Финансах",
+    tabAll: "Все графики",
+    tabTime: "Активность во времени",
+    tabTypes: "Категории транзакций",
+    tabBurst: "Всплеск перед алертом",
+    tabOutcome: "Типы по исходу"
   },
   en: {
     seq1: "Millions of raw transactions form an ocean of noise.",
@@ -131,7 +136,12 @@ export const translations = {
     bankOtk: "Bank Otkazmasi",
     naqdXalq: "Naqd / Xalqaro",
     targetPlaceholder: "GRAPH: TARGET DISTRIBUTION",
-    footerEvent: "WIUT Hackathon 2026 · FinTech / AI in Finance"
+    footerEvent: "WIUT Hackathon 2026 · FinTech / AI in Finance",
+    tabAll: "All Visualizations",
+    tabTime: "Activity Timeline",
+    tabTypes: "Transaction Categories",
+    tabBurst: "Pre-Alert Surge",
+    tabOutcome: "Outcome Breakdown"
   },
   uz: {
     seq1: "Millionlab xom tranzaksiyalar shovqin ummonini hosil qiladi.",
@@ -197,8 +207,13 @@ export const translations = {
     bankOtk: "Bank Otkazmasi",
     naqdXalq: "Naqd / Xalqaro",
     targetPlaceholder: "GRAFIK: TARGET TAQSIMOTI",
-    footerEvent: "WIUT Hackathon 2026 · FinTech / Moliyada Sun'iy Intellekt"
+    footerEvent: "WIUT Hackathon 2026 · FinTech / Moliyada Sun'iy Intellekt",
+    tabAll: "Barcha Grafiklar",
+    tabTime: "Vaqt Bo'yicha Faollik",
+    tabTypes: "Tranzaksiya Toifalari",
+    tabBurst: "Tetiklanish Oldi Portlash",
+    tabOutcome: "Natija Taqsimoti"
   }
 };
 
-export const LanguageContext = createContext('ru');
+export const LanguageContext = createContext('en');
