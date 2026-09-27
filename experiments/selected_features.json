@@ -1,0 +1,40 @@
+{
+  "columns": [
+    "ty_m_bank_otkazmasi",
+    "base_min",
+    "ty_m_naqd",
+    "ty_s_naqd",
+    "ty_s_bank_otkazmasi",
+    "ty_m_karta",
+    "amt_skew",
+    "amt_q90",
+    "base_max",
+    "win_max60",
+    "burst_gap_q90",
+    "base_std",
+    "win_max90",
+    "cross_sh_chiqim_naqd",
+    "amt_q75",
+    "win_mean30",
+    "win_out3",
+    "cross_sh_kirim_bank_otkazmasi",
+    "sig_week",
+    "amt_q10",
+    "cross_sh_kirim_naqd",
+    "amt_q99",
+    "hour_std",
+    "amt_iqr",
+    "cross_sh_chiqim_karta"
+  ],
+  "families": [
+    "base",
+    "amount_shape",
+    "direction_type",
+    "cross",
+    "flow",
+    "windows",
+    "burst",
+    "hour",
+    "signal_date"
+  ]
+}

@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+body {
+  margin: 0;
+}
+
+/* Hero Section Custom Styles */
+.neon-text-glow {
+  text-shadow: 0 0 25px rgba(34, 243, 150, 0.5), 0 0 50px rgba(13, 242, 201, 0.25);
+}
+.neon-logo-glow {
+  text-shadow: 0 0 15px rgba(34, 243, 150, 0.6);
+}
+.neon-pill-glow {
+  box-shadow: 0 0 15px rgba(34, 243, 150, 0.2), inset 0 0 10px rgba(34, 243, 150, 0.1);
+}
+.neon-dot-pulse {
+  box-shadow: 0 0 8px #22f396, 0 0 14px rgba(34, 243, 150, 0.8);
+}
+
+/* EDA Section Custom Styles */
+.font-hud { font-family: 'Rajdhani', sans-serif; }
+.glow-cyan { filter: drop-shadow(0 0 5px rgba(0, 242, 254, 0.8)) drop-shadow(0 0 12px rgba(0, 242, 254, 0.4)); }
+.glow-green { filter: drop-shadow(0 0 5px rgba(74, 222, 128, 0.8)) drop-shadow(0 0 12px rgba(74, 222, 128, 0.4)); }
+.glow-lime { filter: drop-shadow(0 0 5px rgba(163, 230, 53, 0.8)) drop-shadow(0 0 12px rgba(163, 230, 53, 0.4)); }
+.glow-cyan-lg { filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.75)) drop-shadow(0 0 35px rgba(52, 211, 153, 0.45)); }
+.glow-text { text-shadow: 0 0 12px rgba(74, 222, 128, 0.65), 0 0 24px rgba(34, 211, 238, 0.4); }
+
+@keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+@keyframes spin-fast { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes pulse-subtle { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } }
+
+.animate-spin-slow { animation: spin-slow 24s linear infinite; }
+.animate-spin-reverse { animation: spin-reverse 18s linear infinite; }
+.animate-spin-fast { animation: spin-fast 9s linear infinite; }
+.animate-pulse-glow { animation: pulse-subtle 4s ease-in-out infinite; }
+
+.glass-card { 
+  background: linear-gradient(145deg, rgba(10, 15, 25, 0.3) 0%, rgba(5, 8, 15, 0.5) 100%); 
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px); 
+  border: 1px solid rgba(0, 242, 254, 0.08); 
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08); 
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.glass-card:hover {
+  background: linear-gradient(145deg, rgba(15, 22, 35, 0.65) 0%, rgba(8, 12, 22, 0.85) 100%); 
+  border: 1px solid rgba(34, 243, 150, 0.25);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(34, 243, 150, 0.1), inset 0 1px 0 rgba(34, 243, 150, 0.2);
+  transform: translateY(-6px) scale(1.01);
+}
+.prism-background { 
+  position: absolute; width: 540px; height: 520px; left: 50%; top: 55%; 
+  transform: translate(-50%, -46%) rotate(12deg); 
+  background: radial-gradient(ellipse at 35% 35%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 215, 0, 0.16) 24%, rgba(255, 80, 80, 0.18) 42%, rgba(0, 180, 255, 0.22) 65%, transparent 80%), 
+              conic-gradient(from 145deg at 48% 50%, rgba(255, 100, 100, 0.35), rgba(255, 200, 50, 0.38), rgba(80, 255, 150, 0.3), rgba(0, 200, 255, 0.42), rgba(180, 100, 255, 0.35), rgba(255, 100, 100, 0.35)); 
+  filter: blur(28px) contrast(140%) brightness(115%); opacity: 0.65; mix-blend-mode: screen; pointer-events: none; border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%; z-index: 1; 
+}
+
+.prism-facets { 
+  position: absolute; width: 480px; height: 480px; left: 50%; top: 55%; 
+  transform: translate(-50%, -48%); 
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.18) 48%, rgba(255,255,255,0.3) 50%, transparent 52%), 
+              linear-gradient(45deg, transparent 42%, rgba(130,220,255,0.2) 49%, rgba(255,255,255,0.25) 50%, transparent 54%), 
+              linear-gradient(70deg, transparent 46%, rgba(255,180,240,0.18) 50%, transparent 53%); 
+  filter: blur(4px); opacity: 0.55; pointer-events: none; z-index: 1; 
+}
+
+.table-row-border { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+
+.chart-img { 
+  filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.4)) drop-shadow(0 0 15px rgba(74, 222, 128, 0.2)); 
+  border-radius: 12px; width: 100%; height: auto; 
+}
+
+/* Immersive Cyber Effects */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.25) 50%,
+    rgba(0, 0, 0, 0.25)
+  );
+  background-size: 100% 4px;
+  z-index: 10;
+  opacity: 0.15;
+}
+
+.glow-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 100px rgba(13, 242, 201, 0.1);
+  z-index: 10;
+}

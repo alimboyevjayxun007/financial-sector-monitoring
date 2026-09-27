@@ -1,0 +1,19 @@
+# Pinned to the exact versions the reported results were produced with.
+# SEED=42 alone does not give reproducibility: pandas 3.0 changed groupby and
+# astype semantics this code depends on, and a different resolution would
+# produce different features and a different score from the same seed.
+numpy==2.5.3
+pandas==3.0.6
+pyarrow==25.0.1
+scipy==1.18.1
+scikit-learn==1.9.1
+lightgbm==4.7.0
+xgboost==3.4.1
+catboost==1.2.10
+optuna==5.0.0
+shap==0.52.0
+matplotlib==3.11.2
+jupyter==1.1.1
+notebook==7.6.3
+nbconvert==7.17.1
+pytest==9.1.1
